@@ -14,14 +14,6 @@ func (n *node) String() string {
 	return fmt.Sprintf("%d - %p %p\n", n.sym, n.right, n.left)
 }
 
-func Show(n *node) {
-	if n != nil {
-		fmt.Println(n)
-		Show(n.right)
-		Show(n.left)
-	}
-}
-
 func createNode() *node {
 	return &node{-1, nil, nil}
 }

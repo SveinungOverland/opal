@@ -158,6 +158,9 @@ func Encode(data []byte) []byte {
 	// RFC7541 5.2 says the last padding bits should be the most
 	// significant bits of the huffcode corresponding to EOS (end-of-string) symbol.
 	if byteIndex < 7 {
+		// !NB - The most significan bits of the huffcode for EOS is always 1's. Therefore,
+		// nextByte has a default value of 255 (1111 1111)
+
 		/* eos := huffTable[256]
 		diff := eos.length - remainingBits */
 		encoded = append(encoded, nextByte)

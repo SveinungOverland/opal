@@ -31,21 +31,19 @@ func TestEncode(t *testing.T) {
 }
 
 func TestDecode(t *testing.T) {
-	root := huff.BuildTree()
 	for _, test := range testData {
 		expected := test.value
 		bytes, _ := hex.DecodeString(test.encodedHex)
-		actual, _ := huff.Decode(root, bytes)
+		actual, _ := huff.Decode(bytes)
 		assertEqual(t, string(actual), expected)
 	}
 }
 
 func TestEncodeAndDecode(t *testing.T) {
-	root := huff.BuildTree()
 	for _, test := range testData {
 		expected := []byte(test.value)
 		encoded := huff.Encode(expected)
-		decoded, _ := huff.Decode(root, encoded)
+		decoded, _ := huff.Decode(encoded)
 		assertEqual(t, string(decoded), string(expected))
 	}
 }

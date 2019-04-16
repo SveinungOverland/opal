@@ -1,29 +1,40 @@
 package hpack
 
-type DynamicTable struct {
-	maxSize      int
+type dynamicTable struct {
+	maxSize      uint32
 	HeaderFields []*HeaderField
 }
 
-func NewDynamicTable(size int) *DynamicTable {
-	return &DynamicTable{
+func NewDynamicTable(size uint32) *dynamicTable {
+	return &dynamicTable{
 		maxSize:      size,
 		HeaderFields: make([]*HeaderField, 0),
 	}
 }
 
-func (dynT *DynamicTable) Add(hf *HeaderField) {
+func (dynT *dynamicTable) add(hf *HeaderField) {
 	dynT.HeaderFields = append(dynT.HeaderFields, []*HeaderField{hf}...)
 }
 
-func (dynT *DynamicTable) Length() int {
-	return len(dynT.HeaderFields)
+func (dynT *dynamicTable) length() uint32 {
+	return uint32(len(dynT.HeaderFields))
 }
 
-func (dynT *DynamicTable) Remove(index int) *HeaderField {
+func (dynT *dynamicTable) get(index uint32) *HeaderField {
+	if index < 0 || index >= uint32(len(dynT.HeaderFields)) {
+		return nil
+	}
+	return dynT.HeaderFields[index]
+}
+
+func (dynT *dynamicTable) setMaxSize(size uint32) {
+	dynT.maxSize = size
+}
+
+func (dynT *dynamicTable) remove(index uint32) *HeaderField {
 	removed := dynT.HeaderFields[index]
 
-	if index < dynT.Length()-1 {
+	if index < dynT.length()-1 {
 		dynT.HeaderFields = append(dynT.HeaderFields[:index], dynT.HeaderFields[(index+1):]...)
 	} else {
 		dynT.HeaderFields = dynT.HeaderFields[:index]

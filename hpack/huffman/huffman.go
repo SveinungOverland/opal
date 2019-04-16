@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+var root *node // The root node of the built tree
+
 type node struct {
 	sym         int   // ASCII-value
 	right, left *node // Children
@@ -19,10 +21,6 @@ func createNode() *node {
 }
 
 // BuildTree buildes the huffman tree based on the ASCII-table and returns the root node
-func BuildTree() (root *node) {
-	return buildTree(huffTable)
-}
-
 func buildTree(table *HuffTable) (root *node) {
 	root = createNode()
 
@@ -64,7 +62,7 @@ func buildTree(table *HuffTable) (root *node) {
 }
 
 // Decode decodes an array of huffman-encoded bytes
-func Decode(root *node, data []byte) ([]byte, error) {
+func Decode(data []byte) ([]byte, error) {
 	if root == nil {
 		return nil, errors.New("Root node can not be nil")
 	}
@@ -159,4 +157,9 @@ func Encode(data []byte) []byte {
 	}
 
 	return encoded
+}
+
+// Build tree on application start
+func init() {
+	root = buildTree(huffTable)
 }

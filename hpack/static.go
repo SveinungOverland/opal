@@ -7,6 +7,25 @@ func getStaticHF(index uint32) *HeaderField {
 	return &staticTableEntries[index-1] // Index address space starts at 1, not 0 (sadly :( )
 }
 
+// Attempts to find corresponding headerfield in the static table. If a match in
+// name is found, idx indicates the index (starts at 1), but perfectMatch indicates a match
+// both in name and value.
+func findStaticHF(hf *HeaderField) (idx uint32, perfectMatch bool) {
+	perfectMatch = false
+
+	for i, shf := range staticTableEntries {
+		nameMatch, valueMatch := shf.equal(hf)
+		if nameMatch && valueMatch {
+			idx = uint32(i + 1) // Index address space starts at 1, not 0
+			perfectMatch = true
+			break // Stop search
+		} else if nameMatch {
+			idx = uint32(i + 1)
+		}
+	}
+	return idx, perfectMatch
+}
+
 var staticTableEntries = [...]HeaderField{
 	{Name: ":authority"},
 	{Name: ":method", Value: "GET"},

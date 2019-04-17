@@ -17,6 +17,12 @@ func (hf *HeaderField) size() uint32 {
 	return uint32(len(hf.Name) + len(hf.Value) + 32)
 }
 
+// Checks if two headerfields are equal. "nameMatch" indicates that the name matches
+//, but valueMatch indicates that the value matches
+func (hf *HeaderField) equal(ohf *HeaderField) (nameMatch bool, valueMatch bool) {
+	return hf.Name == ohf.Name, hf.Value == ohf.Value
+}
+
 func (hf *HeaderField) String() string {
 	return fmt.Sprintf("%s: %s", hf.Name, hf.Value)
 }
@@ -35,12 +41,13 @@ func newDynamicTable(maxSize uint32) *dynamicTable {
 	}
 }
 
-// Checks if size is larger than max size, and if so, removes entires
+// Checks if size is larger than max size, and if so, removes entires.
 func (dynT *dynamicTable) evictionCheck() bool {
 	// Calculate how many entires needs to be removed
 	var n uint32 // Number of entries to remove
 
-	// As long as the size is larger than max size, remove an entry
+	// As long as the size is larger than max size, remove an entry.
+	//  Read RFC7541 4.3 and 4.4 for more details
 	for dynT.size > dynT.maxSize && n < dynT.length() {
 		dynT.size -= dynT.HeaderFields[dynT.length()-1-n].size()
 		n++
@@ -86,4 +93,22 @@ func (dynT *dynamicTable) get(index uint32) *HeaderField {
 func (dynT *dynamicTable) setMaxSize(size uint32) {
 	dynT.maxSize = size
 	dynT.evictionCheck()
+}
+
+// Tries to find a corresponding headerfield in the dynamic table. Idx is the index of a name match,
+// but perfectMatch indicates a match in both name and value.
+func (dynT *dynamicTable) findIndex(hf *HeaderField) (idx uint32, perfectMatch bool) {
+	perfectMatch = false
+
+	for i, dhf := range dynT.HeaderFields {
+		nameMatch, valueMatch := dhf.equal(hf)
+		if nameMatch && valueMatch {
+			idx = uint32(i + 1) // The index address space starts at 1, not 0
+			perfectMatch = true
+			break
+		} else if nameMatch {
+			idx = uint32(i + 1)
+		}
+	}
+	return idx, perfectMatch
 }

@@ -1,8 +1,10 @@
 package hpack
 
-type HeaderField struct {
-	Name  string
-	Value string
+func getStaticHF(index uint32) *HeaderField {
+	if index == 0 || index > uint32(len(staticTableEntries)) {
+		return nil
+	}
+	return &staticTableEntries[index-1] // Index address space starts at 1, not 0 (sadly :( )
 }
 
 var staticTableEntries = [...]HeaderField{

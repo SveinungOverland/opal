@@ -2,10 +2,10 @@ package hpack
 
 import "fmt"
 
-type DecodingError struct {
+type decodingError struct {
 	Err error
 }
 
-func (de DecodingError) Error() string {
+func (de decodingError) Error() string {
 	return fmt.Sprintf("decoding error: %v", de.Err)
 }

@@ -40,24 +40,24 @@ func ReadFrame(r io.Reader) Frame {
 	r.Read(typeFlagBuffer)
 
 	switch frameType := typeFlagBuffer[0]; frameType {
-	case 0x00: // Frame is of type Data
+	case 0x00: // Frame is of type Data  |  Carries request or response data
 		data := types.CreateData(typeFlagBuffer[1], r, length)
 		frame.Type = data
 		frame.Flags = data.Flags
 		frame.Payload = data.Payload
-	case 0x01: // Frame is of type Headers
+	case 0x01: // Frame is of type Headers  |  Carries request/response headers/trailers; can initiate a stream
 		headers := types.CreateHeaders(typeFlagBuffer[1], r, length)
 		frame.Type = headers
 		frame.Flags = headers.Flags
 		frame.Payload = headers.Payload
-	case 0x02: // Frame is of type Priority
-	case 0x03: // Frame is of type RstStream
-	case 0x04: // Frame is of type Settings
-	case 0x05: // Frame is of type PushPromise
-	case 0x06: // Frame is of type Ping
-	case 0x07: // Frame is of type GoAway
-	case 0x08: // Frame is of type WindowUpdate
-	case 0x09: // Frame is of type Continuation
+	case 0x02: // Frame is of type Priority  |  Indicates priority of a stream
+	case 0x03: // Frame is of type RstStream  |  Terminates a stream
+	case 0x04: // Frame is of type Settings  |  Defines parameters for the connection only
+	case 0x05: // Frame is of type PushPromise  |  Signals peer for server push
+	case 0x06: // Frame is of type Ping  |  Maintenance frame for checking RTT, connection, etc
+	case 0x07: // Frame is of type GoAway  |  For shutting down a connection
+	case 0x08: // Frame is of type WindowUpdate  |  Frame responsible for flow control adjustments
+	case 0x09: // Frame is of type Continuation  |  Extends a HEADERS frame and can carry more headers
 	}
 
 	identifierBuffer := make([]byte, 4)

@@ -126,7 +126,7 @@ func (d *decoder) parseIndexedField() error {
 		return err
 	}
 
-	hf, ok := d.getHeaderFieldByIndex(uint32(idx))
+	hf, ok := d.getHeaderFieldByIndex(idx)
 	if !ok {
 		return decodingError{errors.New(fmt.Sprintf("Invalid index: %d", idx))}
 	}
@@ -239,8 +239,19 @@ func readLiteralString(buf []byte) (s string, remaining []byte, err error) {
 	}
 
 	return string(decoded), buf[stringLength:], err
-
 }
+
+/*
+0   1   2   3   4   5   6   7
++---+---+---+---+---+---+---+---+
+| ? | ? | ? | 1   1   1   1   1 |
++---+---+---+-------------------+
+| 1 |    Value-(2^N-1) LSB      |
++---+---------------------------+
+               ...
++---+---------------------------+
+| 0 |    Value-(2^N-1) MSB      |
++---+---------------------------+ */
 
 // Reads the least significant bits
 func readLSBValue(n byte, buf []byte) (uint32, []byte, error) {
@@ -262,6 +273,41 @@ func readLSBValue(n byte, buf []byte) (uint32, []byte, error) {
 	default:
 		err = errors.New("Invalid LSB n")
 	}
-	remaining := buf[1:] // Remove read byte from buffer
-	return value, remaining, err
+
+	// Check if value is less than 2^N - 1, if so, return that value
+	// Pseudo code from RFC7541:
+	// if I < 2^N - 1, return I
+	if value < (1<<uint32(n) - 1) {
+		return value, buf[1:], err
+	}
+
+	// Otherwise, the value is actually longer. Have to read bytes until
+	// the MSB of the next byte is 0. Read RFC7541 - Section 5.1
+
+	// Pseudo code from RFC7541 - Section 5.1:
+	/* decode I from the next N bits
+	else
+		M = 0
+		repeat
+			B = next octet
+			I = I + (B & 127) * 2^M
+			M = M + 7
+		while B & 128 == 128
+		return I
+	*/
+	var m uint32
+	tempBuf := buf[1:]
+	for len(tempBuf) > 0 {
+		b := tempBuf[0]
+		tempBuf = tempBuf[1:]
+		value += uint32(b&127) << m //  I + (B & 127) * 2^M
+
+		// Check if MSB is 0, then it is done
+		if b&128 == 0 {
+			return value, tempBuf, nil
+		}
+		m += 7
+	}
+
+	return 0, tempBuf, errors.New("Need more data to read")
 }

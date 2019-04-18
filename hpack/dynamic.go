@@ -63,6 +63,7 @@ func (dynT *dynamicTable) evict(n uint32) {
 	}
 	if n >= dynT.length() {
 		dynT.HeaderFields = make([]*HeaderField, 0)
+		return
 	}
 
 	// Evicts n number of entries

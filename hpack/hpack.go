@@ -5,6 +5,7 @@ import "fmt"
 type Context struct {
 	dynT    *dynamicTable
 	decoder *decoder
+	encoder *encoder
 }
 
 // NewContext creates a new hpack-context. It initializes a new dynamic table with a given
@@ -13,10 +14,12 @@ func NewContext(dynamicTableMaxSize uint32) *Context {
 	// Initialize dynamic table
 	dynT := newDynamicTable(dynamicTableMaxSize)
 	decoder := newDecoder(dynT)
+	encoder := newEncoder(dynT)
 
 	return &Context{
 		dynT:    dynT,
 		decoder: decoder,
+		encoder: encoder,
 	}
 }
 
@@ -24,6 +27,18 @@ func NewContext(dynamicTableMaxSize uint32) *Context {
 // Returns an array of HeaderFields
 func (c *Context) Decode(bytes []byte) ([]*HeaderField, error) {
 	return c.decoder.Decode(bytes)
+}
+
+func (c *Context) Encode(hfs []*HeaderField) ([]byte, error) {
+	var bytes []byte
+	for _, hf := range hfs {
+		buf, err := c.encoder.EncodeField(hf)
+		if err != nil {
+			return bytes, err
+		}
+		bytes = append(bytes, buf...)
+	}
+	return bytes, nil
 }
 
 // DynamicTable returns a deep copy of the HeaderFields in the dynamic table

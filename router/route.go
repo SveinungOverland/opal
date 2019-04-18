@@ -50,6 +50,22 @@ func (r *route) addHandlers(method string, funcs []HandleFunc) {
 	}
 }
 
+func (r *route) GetHandlers(method string) []HandleFunc {
+	switch method {
+	case "GET":
+		return r.Get
+	case "POST":
+		return r.Post
+	case "PUT":
+		return r.Put
+	case "DELETE":
+		return r.Delete
+	case "PATCH":
+		return r.Patch
+	}
+	return nil
+}
+
 func (r *route) merge(route *route) {
 	// Overwrite config
 	r.static = route.static

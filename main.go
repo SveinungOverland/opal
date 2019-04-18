@@ -6,7 +6,7 @@ import (
 )
 
 func handler(req interface{} /* *Request */, res interface{} /* *Response */) {
-
+	fmt.Println("My cool and custom handler! :D")
 }
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	r.Get("/aaa/BBc/", handler)
 	r.Put("/aaa/:id", handler)
 	r.Static("/image", "./public")
-	r.Post("/123/23/path", handler)
+	r.Post("/123/23/path", handler, handler, handler)
 	r.Put("/:lat/:lng/path/", handler)
 
 	root := r.Root()
@@ -30,6 +30,20 @@ func main() {
 	fmt.Println(params)
 	fmt.Println(fh)
 
+	// Run handlers if a match was found
+	if match {
+		runHandlers := func(method string) {
+			handlers := route.GetHandlers(method)
+			for _, handler := range handlers {
+				handler(nil, nil)
+			}
+		}
+		runHandlers("GET")
+		runHandlers("POST")
+		runHandlers("PUT")
+	}
+
+	// If a filehandler was provided
 	if fh != nil {
 		file, err := fh.ReadFile()
 		if err != nil {

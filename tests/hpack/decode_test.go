@@ -11,11 +11,11 @@ import (
 // TestDecode tests Decode.decode()
 func TestDecode(t *testing.T) {
 	testData := getTestData01()
-
 	context := hpack.NewContext(256)
 	testContextDecode(t, context, testData)
 }
 
+// TestDecode02 tests Decode.decode()
 func TestDecode02(t *testing.T) {
 	testData := getTestData02()
 	context := hpack.NewContext(256)

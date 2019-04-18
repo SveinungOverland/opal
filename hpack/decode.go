@@ -50,9 +50,9 @@ func (d *decoder) decodeHeaders(buf []byte) error {
 		case hfRepr == litrWithIndex:
 			err = d.parseLiteralString(6, litrWithIndex)
 		case hfRepr == litrWithoutIndex:
-			err = d.parseLiteralString(4, litrWithIndex)
-		case hfRepr == litrNeverIndexed:
 			err = d.parseLiteralString(4, litrWithoutIndex)
+		case hfRepr == litrNeverIndexed:
+			err = d.parseLiteralString(4, litrNeverIndexed)
 		case hfRepr == dynTabSizeUpdate:
 			err = d.parseDynTabSizeUpdate()
 		}

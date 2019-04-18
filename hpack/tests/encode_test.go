@@ -1,4 +1,4 @@
-package hpack_test
+package hpack
 
 import (
 	"opal/hpack"

@@ -1,4 +1,4 @@
-package huff_test
+package huff
 
 import (
 	"encoding/hex"

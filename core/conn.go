@@ -54,11 +54,11 @@ func (c *Conn) serve() {
 
 	prefaceBuffer := make([]byte, 24)
 	c.tlsConn.Read(prefaceBuffer)
-	frame := frame.ReadFrame(c.tlsConn)
-	fmt.Printf("%+v\n", frame)
+	settingsFrame := frame.ReadFrame(c.tlsConn)
+	fmt.Printf("%+v\n", settingsFrame)
 
 	// TODO: Change actual settings based on the frame above
-	settingsResponse := frame.Frame{
+	settingsResponse := &frame.Frame{
 		ID:     0,
 		Type:   frame.SettingsType,
 		Length: 0,
@@ -67,6 +67,11 @@ func (c *Conn) serve() {
 		},
 		Payload: &types.SettingsPayload{},
 	}
+
+	fmt.Printf("%+v\n", settingsResponse)
+
+	c.tlsConn.Read(prefaceBuffer)
+	fmt.Println(string(prefaceBuffer))
 
 	// TODO: Write settingsResponse to client to acknowledge settings frame
 

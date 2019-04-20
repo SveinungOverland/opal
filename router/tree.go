@@ -9,7 +9,7 @@ import (
 // New routes will be created and appended to the tree if a wanted path does not exist.
 // fullPath is the full path (for example "/aaaaa/bbbbb/")
 // It returns the leaf route of provided path, and a bool indicating if the route was created
-func createOrFindRoute(root *route, fullPath string) (*route, bool) {
+func createOrFindRoute(root *Route, fullPath string) (*Route, bool) {
 	// Create sub paths
 	subPaths := pathToSubPaths(fullPath)
 	if len(subPaths) == 0 {
@@ -62,7 +62,7 @@ func createOrFindRoute(root *route, fullPath string) (*route, bool) {
 // Search searches after a route relative to a provided root route with a given path.
 // It returns "match", which indicates if a route was found.
 // "r" is the route found. If match is true, then r is the matching route. Otherwise it is farthest route found based on the path.
-func Search(root *route, path string) (match bool, r *route, params map[string]string, fh *FileHandler) {
+func search(root *Route, path string) (match bool, r *Route, params map[string]string, fh *FileHandler) {
 	subPaths := pathToSubPaths(path)
 	params = make(map[string]string)
 

@@ -5,7 +5,7 @@ type HandleFunc func(req interface{} /* *Request */, res interface{} /* *Respons
 
 type router struct {
 	basePath string
-	root     *route
+	root     *Route
 }
 
 func NewRouter(basePath string) *router {
@@ -43,13 +43,13 @@ func (r *router) Static(path string, relativePath string) {
 	leafRoute.staticPath = relativePath
 }
 
-func (r *router) Root() *route {
+func (r *router) Root() *Route {
 	return r.root
 }
 
 // ------- HELPERS ---------
 
-func createFullRoute(root *route, fullPath string, method string, funcs []HandleFunc) {
+func createFullRoute(root *Route, fullPath string, method string, funcs []HandleFunc) {
 	route, _ := createOrFindRoute(root, fullPath)
 	if route == nil {
 		panic("Invalid path!")

@@ -4,14 +4,17 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"opal/router"
 )
 
 type Server struct {
 	cert          tls.Certificate
 	isTLS         bool
 	connErrorChan *chan error
+	rootRoute     *router.Route
 }
 
+// NewTLSServer creates a new http2-server with a TLS configuration
 func NewTLSServer(certPath, privateKeyPath string, errorChannel *chan error) (*Server, error) {
 	cert, err := tls.LoadX509KeyPair(certPath, privateKeyPath)
 	if err != nil {
@@ -22,9 +25,11 @@ func NewTLSServer(certPath, privateKeyPath string, errorChannel *chan error) (*S
 		cert:          cert,
 		isTLS:         true,
 		connErrorChan: errorChannel,
+		rootRoute:     router.NewRoot(),
 	}, nil
 }
 
+// Listen establishes a TCP-listener on a given port
 func (s *Server) Listen(port int16) error {
 	fmt.Println("Starting http2 server on port", port)
 
@@ -54,7 +59,7 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 	c := &Conn{
 		server: s,
 		conn:   conn,
-		isTLS:  false,
+		isTLS:  s.isTLS,
 	}
 
 	if s.isTLS {

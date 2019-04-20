@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 )
 
@@ -14,18 +15,22 @@ func (s SettingsFlags) ReadFlags(flags byte) {
 }
 
 type SettingsPayload struct {
-	ID    uint16
-	Value uint32
+	idValuePair map[uint16]uint32
 }
 
 func (s SettingsPayload) ReadPayload(r io.Reader, length uint32, flags IFlags) {
+	s.idValuePair = make(map[uint16]uint32)
+	fmt.Println(length / 6)
 	idBuffer := make([]byte, 2)
-	r.Read(idBuffer)
-	s.ID = binary.BigEndian.Uint16(idBuffer)
-
 	valueBuffer := make([]byte, 4)
-	r.Read(valueBuffer)
-	s.Value = binary.BigEndian.Uint32(valueBuffer)
+	for i := uint32(0); i < length/6; i++ {
+		r.Read(idBuffer)
+		r.Read(valueBuffer)
+
+		fmt.Println(idBuffer, valueBuffer)
+		s.idValuePair[binary.BigEndian.Uint16(idBuffer)] = binary.BigEndian.Uint32(valueBuffer)
+	}
+	fmt.Printf("%+v\n", s.idValuePair)
 }
 
 type Settings struct {

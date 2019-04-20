@@ -19,54 +19,99 @@ different structs for all the different
 types of frame, with corresponding flags
 */
 
+const (
+	DataType byte = iota
+	HeadersType
+	PriorityType
+	RstStreamType
+	SettingsType
+	PushPromiseType
+	PingType
+	GoAwayType
+	WindowUpdateType
+	ContinuationType
+)
+
+// FrameStruct describes the data that is needed to receive and send a frame
 type Frame struct {
 	// Remember to ignore the first bit of this field when reading
 	ID      uint32
-	Type    interface{} // Refactor this to enum
+	Type    byte
 	Flags   types.IFlags
 	Length  uint32
 	Payload types.IPayload
 }
 
+// ReadFrame takes a reader and returns a frame with type
 func ReadFrame(r io.Reader) Frame {
 	frame := Frame{}
 
 	lengthBuffer := make([]byte, 3)
 	r.Read(lengthBuffer)
-	length := binary.BigEndian.Uint32(lengthBuffer)
+	length := binary.BigEndian.Uint32(append([]byte{0}, lengthBuffer...))
 	frame.Length = length
 
 	typeFlagBuffer := make([]byte, 2)
 	r.Read(typeFlagBuffer)
 
-	switch frameType := typeFlagBuffer[0]; frameType {
-	case 0x00: // Frame is of type Data  |  Carries request or response data
-		data := types.CreateData(typeFlagBuffer[1], r, length)
-		frame.Type = data
-		frame.Flags = data.Flags
-		frame.Payload = data.Payload
-	case 0x01: // Frame is of type Headers  |  Carries request/response headers/trailers; can initiate a stream
-		headers := types.CreateHeaders(typeFlagBuffer[1], r, length)
-		frame.Type = headers
-		frame.Flags = headers.Flags
-		frame.Payload = headers.Payload
-	case 0x02: // Frame is of type Priority  |  Indicates priority of a stream
-	case 0x03: // Frame is of type RstStream  |  Terminates a stream
-	case 0x04: // Frame is of type Settings  |  Defines parameters for the connection only
-	case 0x05: // Frame is of type PushPromise  |  Signals peer for server push
-	case 0x06: // Frame is of type Ping  |  Maintenance frame for checking RTT, connection, etc
-	case 0x07: // Frame is of type GoAway  |  For shutting down a connection
-	case 0x08: // Frame is of type WindowUpdate  |  Frame responsible for flow control adjustments
-	case 0x09: // Frame is of type Continuation  |  Extends a HEADERS frame and can carry more headers
-	}
-
 	identifierBuffer := make([]byte, 4)
 	r.Read(identifierBuffer)
-	identifier := binary.BigEndian.Uint32(identifierBuffer) & 0x8000 // Bitwise and is used to remove the very first bit, as this is a reserved bit
+	identifier := binary.BigEndian.Uint32(identifierBuffer) & 0x8000 // Bitwise 'and' is used to remove the very first bit, as this is a reserved bit
 	frame.ID = identifier
 
-	payloadBuffer := make([]byte, length)
-	r.Read(payloadBuffer)
+	// Handle frame payload dependent on frame type
+	switch frameType := typeFlagBuffer[0]; frameType {
+	case DataType: // Frame is of type Data  |  Carries request or response data
+		data := types.CreateData(typeFlagBuffer[1], r, length)
+		frame.Type = DataType
+		frame.Flags = data.Flags
+		frame.Payload = data.Payload
+	case HeadersType: // Frame is of type Headers  |  Carries request/response headers/trailers; can initiate a stream
+		headers := types.CreateHeaders(typeFlagBuffer[1], r, length)
+		frame.Type = HeadersType
+		frame.Flags = headers.Flags
+		frame.Payload = headers.Payload
+	case PriorityType: // Frame is of type Priority  |  Indicates priority of a stream
+		priority := types.CreatePriority(typeFlagBuffer[1], r, length)
+		frame.Type = PriorityType
+		frame.Flags = priority.Flags
+		frame.Payload = priority.Payload
+	case RstStreamType: // Frame is of type RstStream  |  Terminates a stream
+		rstStream := types.CreateRstStream(typeFlagBuffer[1], r, length)
+		frame.Type = RstStreamType
+		frame.Flags = rstStream.Flags
+		frame.Payload = rstStream.Payload
+	case SettingsType: // Frame is of type Settings  |  Defines parameters for the connection only
+		settings := types.CreateSettings(typeFlagBuffer[1], r, length)
+		frame.Type = SettingsType
+		frame.Flags = settings.Flags
+		frame.Payload = settings.Payload
+	case PushPromiseType: // Frame is of type PushPromise  |  Signals peer for server push
+		pushPromise := types.CreatePushPromise(typeFlagBuffer[1], r, length)
+		frame.Type = PushPromiseType
+		frame.Flags = pushPromise.Flags
+		frame.Payload = pushPromise.Payload
+	case PingType: // Frame is of type Ping  |  Maintenance frame for checking RTT, connection, etc
+		ping := types.CreatePing(typeFlagBuffer[1], r, length)
+		frame.Type = PingType
+		frame.Flags = ping.Flags
+		frame.Payload = ping.Payload
+	case GoAwayType: // Frame is of type GoAway  |  For shutting down a connection
+		goAway := types.CreateGoAway(typeFlagBuffer[1], r, length)
+		frame.Type = GoAwayType
+		frame.Flags = goAway.Flags
+		frame.Payload = goAway.Payload
+	case WindowUpdateType: // Frame is of type WindowUpdate  |  Frame responsible for flow control adjustments
+		windowUpdate := types.CreateWindowUpdate(typeFlagBuffer[1], r, length)
+		frame.Type = WindowUpdateType
+		frame.Flags = windowUpdate.Flags
+		frame.Payload = windowUpdate.Payload
+	case ContinuationType: // Frame is of type Continuation  |  Extends a HEADERS frame and can carry more headers
+		continuation := types.CreateContinuation(typeFlagBuffer[1], r, length)
+		frame.Type = ContinuationType
+		frame.Flags = continuation.Flags
+		frame.Payload = continuation.Payload
+	}
 
 	return frame
 }

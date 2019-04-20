@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	srv, _ := core.NewTLSServer("./server.crt", "./server.key")
+	srv, _ := core.NewTLSServer("./server.crt", "./server.key", nil)
 
 	log.Fatal(srv.Listen(8080))
 }

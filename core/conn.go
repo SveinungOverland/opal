@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"opal/frame/types"
+	"opal/hpack"
 
 	"opal/frame"
 )
@@ -11,7 +13,7 @@ import (
 type StreamState uint8
 
 const (
-	idle StreamState = 1
+	idle StreamState = iota + 1
 	reservedLocal
 	reservedRemote
 	open
@@ -30,6 +32,7 @@ type Conn struct {
 	server        *Server
 	conn          net.Conn
 	tlsConn       *tls.Conn
+	hpack         *hpack.Context
 	isTLS         bool
 	maxConcurrent uint32
 	streams       map[uint32]Stream // map streamId to Stream instance
@@ -49,8 +52,26 @@ func (c *Conn) serve() {
 		}
 	}
 
-	// Listen for frames
-	for {
-		frame.ReadFrame(c.conn)
+	prefaceBuffer := make([]byte, 24)
+	c.tlsConn.Read(prefaceBuffer)
+	frame := frame.ReadFrame(c.tlsConn)
+	fmt.Printf("%+v\n", frame)
+
+	// TODO: Change actual settings based on the frame above
+	settingsResponse := frame.Frame{
+		ID:     0,
+		Type:   frame.SettingsType,
+		Length: 0,
+		Flags: types.SettingsFlags{
+			Ack: true,
+		},
+		Payload: &types.SettingsPayload{},
 	}
+
+	// TODO: Write settingsResponse to client to acknowledge settings frame
+
+	// // Listen for frames
+	// for {
+	// 	frame.ReadFrame(c.conn)
+	// }
 }

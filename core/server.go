@@ -58,7 +58,11 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 	}
 
 	if s.isTLS {
-		config := &tls.Config{Certificates: []tls.Certificate{s.cert}}
+		config := &tls.Config{
+			Certificates: []tls.Certificate{s.cert},
+			ServerName:   "localhost", //Todo: change this
+			NextProtos:   []string{"h2"},
+		}
 		c.tlsConn = tls.Server(conn, config)
 		c.isTLS = true
 	}

@@ -1,24 +1,30 @@
 package types
 
-import "io"
-
 type PingFlags struct {
 	Ack bool
 }
 
-func (p PingFlags) ReadFlags(flags byte) {
-	p.Ack = (flags & 0x01) != 0x00
+func (p *PingFlags) ReadFlags(flags byte) {
+	p.Ack = (flags & 0x1) != 0x0
+}
+
+func (p PingFlags) Byte() (flags byte) {
+	if p.Ack {
+		flags |= 0x1
+	}
+	return
 }
 
 type PingPayload struct {
-	Data [8]byte
+	Data []byte
 }
 
-func (p PingPayload) ReadPayload(r io.Reader, length uint32, flags IFlags) {
-	dataBuffer := make([]byte, 8)
-	r.Read(dataBuffer)
+func (p *PingPayload) ReadPayload(payload []byte, length uint32, flags IFlags) {
+	p.Data = payload[:8]
+}
 
-	copy(p.Data[:], dataBuffer)
+func (p PingPayload) Bytes(flags IFlags) []byte {
+	return p.Data[:]
 }
 
 type Ping struct {
@@ -26,10 +32,10 @@ type Ping struct {
 	Payload PingPayload
 }
 
-func CreatePing(flags byte, payload io.Reader, payloadLength uint32) *Ping {
+func CreatePing(flags byte, payload []byte, payloadLength uint32) *Ping {
 	ping := &Ping{}
 	ping.Flags.ReadFlags(flags)
-	ping.Payload.ReadPayload(payload, payloadLength, ping.Flags)
+	ping.Payload.ReadPayload(payload, payloadLength, &ping.Flags)
 
 	return ping
 }

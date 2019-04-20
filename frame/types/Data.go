@@ -1,33 +1,39 @@
 package types
 
-import "io"
-
 type DataFlags struct {
 	EndStream bool
 	Padded    bool
 }
 
-func (d DataFlags) ReadFlags(flags byte) {
-	d.EndStream = (flags & 0x01) != 0x00
-	d.Padded = (flags & 0x08) != 0x00
+func (d *DataFlags) ReadFlags(flags byte) {
+	d.EndStream = (flags & 0x1) != 0x0
+	d.Padded = (flags & 0x8) != 0x0
+}
+
+func (d DataFlags) Byte() (flags byte) {
+	if d.EndStream {
+		flags |= 0x1
+	}
+	if d.Padded {
+		flags |= 0x8
+	}
+	return
 }
 
 type DataPayload struct {
 	Data []byte
 }
 
-func (d DataPayload) ReadPayload(r io.Reader, length uint32, flags IFlags) {
-	padLength := make([]byte, 1)
-	bytesToRead := length
-	if flags.(DataFlags).Padded {
-		r.Read(padLength)
-		bytesToRead -= uint32(1 + uint8(padLength[0]))
+func (d *DataPayload) ReadPayload(payload []byte, length uint32, flags IFlags) {
+	if flags.(*DataFlags).Padded {
+		d.Data = payload[:length-uint32(payload[0])][1:]
+		return
 	}
+	d.Data = payload
+}
 
-	payloadBuffer := make([]byte, bytesToRead)
-	r.Read(payloadBuffer)
-
-	d.Data = payloadBuffer
+func (d DataPayload) Bytes(flags IFlags) []byte {
+	return d.Data
 }
 
 type Data struct {
@@ -35,10 +41,10 @@ type Data struct {
 	Payload DataPayload
 }
 
-func CreateData(flags byte, payload io.Reader, payloadLength uint32) *Data {
+func CreateData(flags byte, payload []byte, payloadLength uint32) *Data {
 	data := &Data{}
 	data.Flags.ReadFlags(flags)
-	data.Payload.ReadPayload(payload, payloadLength, data.Flags)
+	data.Payload.ReadPayload(payload, payloadLength, &data.Flags)
 
 	return data
 }

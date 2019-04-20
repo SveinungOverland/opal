@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/binary"
-	"io"
 )
 
 type HeadersFlags struct {
@@ -12,11 +11,27 @@ type HeadersFlags struct {
 	Priority   bool
 }
 
-func (h HeadersFlags) ReadFlags(flags byte) {
-	h.EndStream = (flags & 0x01) != 0x00
-	h.EndHeaders = (flags & 0x04) != 0x00
-	h.Padded = (flags & 0x08) != 0x00
+func (h *HeadersFlags) ReadFlags(flags byte) {
+	h.EndStream = (flags & 0x1) != 0x0
+	h.EndHeaders = (flags & 0x4) != 0x0
+	h.Padded = (flags & 0x8) != 0x0
 	h.Priority = (flags & 0x20) != 0x00
+}
+
+func (h HeadersFlags) Byte() (flags byte) {
+	if h.EndStream {
+		flags |= 0x1
+	}
+	if h.EndHeaders {
+		flags |= 0x4
+	}
+	if h.Padded {
+		flags |= 0x8
+	}
+	if h.Priority {
+		flags |= 0x20
+	}
+	return
 }
 
 type HeadersPayload struct {
@@ -24,32 +39,44 @@ type HeadersPayload struct {
 	StreamDependency uint32 // Can only be present if Priority flag  is set
 	PriorityWeight   byte   // Can only be present if Priority flag is set
 	Fragment         []byte
+	PadLength        byte
 }
 
-func (h HeadersPayload) ReadPayload(r io.Reader, length uint32, flags IFlags) {
-	padLength := make([]byte, 1)
-	bytesToRead := length
-	if flags.(HeadersFlags).Padded {
-		r.Read(padLength)
-		bytesToRead -= uint32(1 + uint8(padLength[0]))
+func (h *HeadersPayload) ReadPayload(payload []byte, length uint32, flags IFlags) {
+	index := 0
+	if flags.(*HeadersFlags).Padded {
+		h.PadLength = payload[0]
+		index = 1
 	}
-	if flags.(HeadersFlags).Priority {
-		streamDependencyBuffer := make([]byte, 4)
-		r.Read(streamDependencyBuffer)
+	if flags.(*HeadersFlags).Priority {
+		h.StreamDependency = binary.BigEndian.Uint32(payload[index:][:4]) & 0x7FFF
+		h.StreamExclusive = payload[index]&0x80 != 0x00
+		h.PriorityWeight = payload[index+4]
+		index += 5
+	}
+	h.Fragment = payload[:length-uint32(h.PadLength)][index:]
+}
 
-		h.StreamExclusive = (streamDependencyBuffer[0] & 0x80) != 0x00
-		h.StreamDependency = binary.BigEndian.Uint32(streamDependencyBuffer) & 0x8000
+func (h HeadersPayload) Bytes(flags IFlags) []byte {
+	buffer := make([]byte, len(h.Fragment)+int(h.PadLength))
 
-		weightBuffer := make([]byte, 1)
-		r.Read(weightBuffer)
+	copy(buffer[:len(h.Fragment)], h.Fragment)
 
-		h.PriorityWeight = weightBuffer[0]
+	if flags.(*HeadersFlags).Priority {
+		priBuffer := make([]byte, 5)
+		binary.BigEndian.PutUint32(priBuffer[:4], h.StreamDependency)
+		priBuffer[4] = h.PriorityWeight
+		if h.StreamExclusive {
+			priBuffer[0] |= 0x8
+		}
+		buffer = append(priBuffer, buffer...)
 	}
 
-	fragmentBuffer := make([]byte, bytesToRead)
-	r.Read(fragmentBuffer)
+	if h.PadLength != 0 {
+		buffer = append([]byte{h.PadLength}, buffer...)
+	}
 
-	h.Fragment = fragmentBuffer
+	return buffer
 }
 
 type Headers struct {
@@ -57,10 +84,10 @@ type Headers struct {
 	Payload HeadersPayload
 }
 
-func CreateHeaders(flags byte, payload io.Reader, payloadLength uint32) *Headers {
+func CreateHeaders(flags byte, payload []byte, payloadLength uint32) *Headers {
 	headers := &Headers{}
 	headers.Flags.ReadFlags(flags)
-	headers.Payload.ReadPayload(payload, payloadLength, headers.Flags)
+	headers.Payload.ReadPayload(payload, payloadLength, &headers.Flags)
 
 	return headers
 }

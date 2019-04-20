@@ -2,12 +2,15 @@ package types
 
 import (
 	"encoding/binary"
-	"io"
 )
 
 type PriorityFlags struct{}
 
 func (p PriorityFlags) ReadFlags(flags byte) {}
+
+func (p PriorityFlags) Byte() (flags byte) {
+	return
+}
 
 type PriorityPayload struct {
 	StreamExclusive  bool
@@ -15,17 +18,23 @@ type PriorityPayload struct {
 	PriorityWeight   byte
 }
 
-func (p PriorityPayload) ReadPayload(r io.Reader, length uint32, flags IFlags) {
-	streamDependencyBuffer := make([]byte, 4)
-	r.Read(streamDependencyBuffer)
+func (p *PriorityPayload) ReadPayload(payload []byte, length uint32, flags IFlags) {
 
-	p.StreamExclusive = (streamDependencyBuffer[0] & 0x80) != 0x00
-	p.StreamDependency = binary.BigEndian.Uint32(streamDependencyBuffer) & 0x8000
+	p.StreamExclusive = (payload[0] & 0x80) != 0x00
+	p.StreamDependency = binary.BigEndian.Uint32(payload[:4]) & 0x7FFF
 
-	weightBuffer := make([]byte, 1)
-	r.Read(weightBuffer)
+	p.PriorityWeight = payload[4]
+}
 
-	p.PriorityWeight = weightBuffer[0]
+func (p PriorityPayload) Bytes(flags IFlags) []byte {
+	buffer := make([]byte, 5)
+	binary.BigEndian.PutUint32(buffer[:4], p.StreamDependency)
+	if p.StreamExclusive {
+		buffer[0] |= 0x8
+	}
+	buffer[4] = p.PriorityWeight
+
+	return buffer
 }
 
 type Priority struct {
@@ -33,7 +42,7 @@ type Priority struct {
 	Payload PriorityPayload
 }
 
-func CreatePriority(flags byte, payload io.Reader, payloadLength uint32) *Priority {
+func CreatePriority(flags byte, payload []byte, payloadLength uint32) *Priority {
 	priority := &Priority{}
 	priority.Flags.ReadFlags(flags)
 	priority.Payload.ReadPayload(payload, payloadLength, priority.Flags)

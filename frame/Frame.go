@@ -2,6 +2,7 @@ package frame
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"opal/frame/types"
 )
@@ -56,62 +57,85 @@ func ReadFrame(r io.Reader) Frame {
 
 	identifierBuffer := make([]byte, 4)
 	r.Read(identifierBuffer)
-	identifier := binary.BigEndian.Uint32(identifierBuffer) & 0x8000 // Bitwise 'and' is used to remove the very first bit, as this is a reserved bit
+	identifier := binary.BigEndian.Uint32(identifierBuffer) & 0x7FFF // Bitwise 'and' is used to remove the very first bit, as this is a reserved bit
 	frame.ID = identifier
+
+	payloadBuffer := make([]byte, length)
+	r.Read(payloadBuffer)
 
 	// Handle frame payload dependent on frame type
 	switch frameType := typeFlagBuffer[0]; frameType {
 	case DataType: // Frame is of type Data  |  Carries request or response data
-		data := types.CreateData(typeFlagBuffer[1], r, length)
+		data := types.CreateData(typeFlagBuffer[1], payloadBuffer, length)
 		frame.Type = DataType
-		frame.Flags = data.Flags
-		frame.Payload = data.Payload
+		frame.Flags = &data.Flags
+		frame.Payload = &data.Payload
 	case HeadersType: // Frame is of type Headers  |  Carries request/response headers/trailers; can initiate a stream
-		headers := types.CreateHeaders(typeFlagBuffer[1], r, length)
+		headers := types.CreateHeaders(typeFlagBuffer[1], payloadBuffer, length)
 		frame.Type = HeadersType
-		frame.Flags = headers.Flags
-		frame.Payload = headers.Payload
+		frame.Flags = &headers.Flags
+		frame.Payload = &headers.Payload
 	case PriorityType: // Frame is of type Priority  |  Indicates priority of a stream
-		priority := types.CreatePriority(typeFlagBuffer[1], r, length)
+		priority := types.CreatePriority(typeFlagBuffer[1], payloadBuffer, length)
 		frame.Type = PriorityType
-		frame.Flags = priority.Flags
-		frame.Payload = priority.Payload
+		frame.Flags = &priority.Flags
+		frame.Payload = &priority.Payload
 	case RstStreamType: // Frame is of type RstStream  |  Terminates a stream
-		rstStream := types.CreateRstStream(typeFlagBuffer[1], r, length)
+		rstStream := types.CreateRstStream(typeFlagBuffer[1], payloadBuffer, length)
 		frame.Type = RstStreamType
-		frame.Flags = rstStream.Flags
-		frame.Payload = rstStream.Payload
+		frame.Flags = &rstStream.Flags
+		frame.Payload = &rstStream.Payload
 	case SettingsType: // Frame is of type Settings  |  Defines parameters for the connection only
-		settings := types.CreateSettings(typeFlagBuffer[1], r, length)
+		settings := types.CreateSettings(typeFlagBuffer[1], payloadBuffer, length)
 		frame.Type = SettingsType
-		frame.Flags = settings.Flags
-		frame.Payload = settings.Payload
+		fmt.Printf("%+v\n", settings.Flags)
+		frame.Flags = &settings.Flags
+		frame.Payload = &settings.Payload
 	case PushPromiseType: // Frame is of type PushPromise  |  Signals peer for server push
-		pushPromise := types.CreatePushPromise(typeFlagBuffer[1], r, length)
+		pushPromise := types.CreatePushPromise(typeFlagBuffer[1], payloadBuffer, length)
 		frame.Type = PushPromiseType
-		frame.Flags = pushPromise.Flags
-		frame.Payload = pushPromise.Payload
+		frame.Flags = &pushPromise.Flags
+		frame.Payload = &pushPromise.Payload
 	case PingType: // Frame is of type Ping  |  Maintenance frame for checking RTT, connection, etc
-		ping := types.CreatePing(typeFlagBuffer[1], r, length)
+		ping := types.CreatePing(typeFlagBuffer[1], payloadBuffer, length)
 		frame.Type = PingType
-		frame.Flags = ping.Flags
-		frame.Payload = ping.Payload
+		frame.Flags = &ping.Flags
+		frame.Payload = &ping.Payload
 	case GoAwayType: // Frame is of type GoAway  |  For shutting down a connection
-		goAway := types.CreateGoAway(typeFlagBuffer[1], r, length)
+		goAway := types.CreateGoAway(typeFlagBuffer[1], payloadBuffer, length)
 		frame.Type = GoAwayType
-		frame.Flags = goAway.Flags
-		frame.Payload = goAway.Payload
+		frame.Flags = &goAway.Flags
+		frame.Payload = &goAway.Payload
 	case WindowUpdateType: // Frame is of type WindowUpdate  |  Frame responsible for flow control adjustments
-		windowUpdate := types.CreateWindowUpdate(typeFlagBuffer[1], r, length)
+		windowUpdate := types.CreateWindowUpdate(typeFlagBuffer[1], payloadBuffer, length)
 		frame.Type = WindowUpdateType
-		frame.Flags = windowUpdate.Flags
-		frame.Payload = windowUpdate.Payload
+		frame.Flags = &windowUpdate.Flags
+		frame.Payload = &windowUpdate.Payload
 	case ContinuationType: // Frame is of type Continuation  |  Extends a HEADERS frame and can carry more headers
-		continuation := types.CreateContinuation(typeFlagBuffer[1], r, length)
+		continuation := types.CreateContinuation(typeFlagBuffer[1], payloadBuffer, length)
 		frame.Type = ContinuationType
-		frame.Flags = continuation.Flags
-		frame.Payload = continuation.Payload
+		frame.Flags = &continuation.Flags
+		frame.Payload = &continuation.Payload
 	}
 
 	return frame
+}
+
+// ToBytes turnes a frame into sendable bytes
+func (f *Frame) ToBytes() []byte {
+	frameHeader := make([]byte, 9)
+
+	lengthBuffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(lengthBuffer, f.Length)
+	copy(frameHeader[:3], lengthBuffer[1:])
+
+	frameHeader[3] = f.Type
+	frameHeader[4] = f.Flags.Byte()
+
+	binary.BigEndian.PutUint32(frameHeader[5:], f.ID)
+
+	if f.Length > 0 {
+		return append(frameHeader, f.Payload.Bytes(f.Flags)...)
+	}
+	return frameHeader
 }

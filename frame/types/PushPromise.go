@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/binary"
-	"io"
 )
 
 type PushPromiseFlags struct {
@@ -10,33 +9,45 @@ type PushPromiseFlags struct {
 	Padded     bool
 }
 
-func (p PushPromiseFlags) ReadFlags(flags byte) {
-	p.EndHeaders = (flags & 0x04) != 0x00
-	p.Padded = (flags & 0x08) != 0x00
+func (p *PushPromiseFlags) ReadFlags(flags byte) {
+	p.EndHeaders = (flags & 0x4) != 0x0
+	p.Padded = (flags & 0x8) != 0x0
+}
+
+func (p PushPromiseFlags) Byte() (flags byte) {
+	if p.EndHeaders {
+		flags |= 0x4
+	}
+	if p.Padded {
+		flags |= 0x8
+	}
+	return
 }
 
 type PushPromisePayload struct {
-	StreamID uint32
-	Fragment []byte
+	StreamID  uint32
+	Fragment  []byte
+	PadLength byte
 }
 
-func (p PushPromisePayload) ReadPayload(r io.Reader, length uint32, flags IFlags) {
-	padLength := make([]byte, 1)
-	bytesToRead := length
-	if flags.(PushPromiseFlags).Padded {
-		r.Read(padLength)
-		bytesToRead -= uint32(1 + uint8(padLength[0]))
+func (p *PushPromisePayload) ReadPayload(payload []byte, length uint32, flags IFlags) {
+	index := 0
+	if flags.(*PushPromiseFlags).Padded {
+		p.PadLength = payload[0]
+		index = 1
 	}
-	bytesToRead -= 4
+	p.StreamID = binary.BigEndian.Uint32(payload[index:][:4]) & 0x7FFF // To remove the reserved bit
+	p.Fragment = payload[:length-uint32(p.PadLength)][index+4:]
+}
 
-	streamIDBuffer := make([]byte, 4)
-	r.Read(streamIDBuffer)
-	p.StreamID = binary.BigEndian.Uint32(streamIDBuffer) & 0x8000
-
-	fragmentBuffer := make([]byte, bytesToRead)
-	r.Read(fragmentBuffer)
-
-	p.Fragment = fragmentBuffer
+func (p PushPromisePayload) Bytes(flags IFlags) []byte {
+	buffer := make([]byte, 4+len(p.Fragment)+int(p.PadLength))
+	binary.BigEndian.PutUint32(buffer[:4], p.StreamID)
+	copy(buffer[4:len(p.Fragment)], p.Fragment)
+	if p.PadLength != 0 {
+		buffer = append([]byte{p.PadLength}, buffer...)
+	}
+	return buffer
 }
 
 type PushPromise struct {
@@ -44,10 +55,10 @@ type PushPromise struct {
 	Payload PushPromisePayload
 }
 
-func CreatePushPromise(flags byte, payload io.Reader, payloadLength uint32) *PushPromise {
+func CreatePushPromise(flags byte, payload []byte, payloadLength uint32) *PushPromise {
 	push := &PushPromise{}
 	push.Flags.ReadFlags(flags)
-	push.Payload.ReadPayload(payload, payloadLength, push.Flags)
+	push.Payload.ReadPayload(payload, payloadLength, &push.Flags)
 
 	return push
 }

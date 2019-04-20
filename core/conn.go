@@ -4,10 +4,10 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
-	"opal/frame/types"
 	"opal/hpack"
 
 	"opal/frame"
+	"opal/frame/types"
 )
 
 type StreamState uint8
@@ -54,29 +54,30 @@ func (c *Conn) serve() {
 
 	prefaceBuffer := make([]byte, 24)
 	c.tlsConn.Read(prefaceBuffer)
+	fmt.Println(string(prefaceBuffer))
+
 	settingsFrame := frame.ReadFrame(c.tlsConn)
 	fmt.Printf("%+v\n", settingsFrame)
+
+	c.hpack = hpack.NewContext(settingsFrame.Payload.(*types.SettingsPayload).IDValuePair[1])
 
 	// TODO: Change actual settings based on the frame above
 	settingsResponse := &frame.Frame{
 		ID:     0,
 		Type:   frame.SettingsType,
 		Length: 0,
-		Flags: types.SettingsFlags{
+		Flags: &types.SettingsFlags{
 			Ack: true,
 		},
-		Payload: &types.SettingsPayload{},
 	}
-
-	fmt.Printf("%+v\n", settingsResponse)
-
-	c.tlsConn.Read(prefaceBuffer)
-	fmt.Println(string(prefaceBuffer))
-
 	// TODO: Write settingsResponse to client to acknowledge settings frame
+	settingsFrameBytes := settingsResponse.ToBytes()
+	fmt.Println(settingsFrameBytes)
+	c.tlsConn.Write(settingsFrameBytes)
 
-	// // Listen for frames
-	// for {
-	// 	frame.ReadFrame(c.conn)
-	// }
+	windowUpdateFrame := frame.ReadFrame(c.tlsConn)
+	fmt.Printf("%+v\n", windowUpdateFrame)
+
+	headersFrame := frame.ReadFrame(c.tlsConn)
+	fmt.Println(c.hpack.Decode((headersFrame.Payload.(*types.HeadersPayload).Fragment)))
 }

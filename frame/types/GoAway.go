@@ -2,12 +2,15 @@ package types
 
 import (
 	"encoding/binary"
-	"io"
 )
 
 type GoAwayFlags struct{}
 
 func (g GoAwayFlags) ReadFlags(flags byte) {}
+
+func (g GoAwayFlags) Byte() (flags byte) {
+	return
+}
 
 type GoAwayPayload struct {
 	LastStreamID uint32
@@ -15,19 +18,18 @@ type GoAwayPayload struct {
 	DebugData    []byte
 }
 
-func (g GoAwayPayload) ReadPayload(r io.Reader, length uint32, flags IFlags) {
-	idBuffer := make([]byte, 4)
-	r.Read(idBuffer)
-	g.LastStreamID = binary.BigEndian.Uint32(idBuffer) & 0x8000
+func (g *GoAwayPayload) ReadPayload(payload []byte, length uint32, flags IFlags) {
+	g.LastStreamID = binary.BigEndian.Uint32(payload[0:4]) & 0x8000
+	g.ErrorCode = binary.BigEndian.Uint32(payload[4:8])
+	g.DebugData = payload[8:]
+}
 
-	errBuffer := make([]byte, 4)
-	r.Read(errBuffer)
-	g.ErrorCode = binary.BigEndian.Uint32(errBuffer)
-
-	dataBuffer := make([]byte, length-8)
-	r.Read(dataBuffer)
-
-	g.DebugData = dataBuffer
+func (g GoAwayPayload) Bytes(flags IFlags) []byte {
+	buffer := make([]byte, 8+len(g.DebugData))
+	binary.BigEndian.PutUint32(buffer[:4], g.LastStreamID)
+	binary.BigEndian.PutUint32(buffer[4:8], g.ErrorCode)
+	copy(buffer[8:], g.DebugData)
+	return buffer
 }
 
 type GoAway struct {
@@ -35,7 +37,7 @@ type GoAway struct {
 	Payload GoAwayPayload
 }
 
-func CreateGoAway(flags byte, payload io.Reader, payloadLength uint32) *GoAway {
+func CreateGoAway(flags byte, payload []byte, payloadLength uint32) *GoAway {
 	goAway := &GoAway{}
 	goAway.Flags.ReadFlags(flags)
 	goAway.Payload.ReadPayload(payload, payloadLength, goAway.Flags)

@@ -16,8 +16,8 @@ type Request struct {
 	Header    map[string]string
 	Body      []byte
 
-	next bool   // Bool for deciding if next request can be handled
-	Next func() // Changes the next-value to true
+	next   bool   // Bool for deciding if next request can be handled
+	Reject func() // Changes the next-value to true
 }
 
 // ----- PRIVATE METHODS ------
@@ -43,12 +43,12 @@ func (r *Request) parsePseudoHeader(headerName string, value string) {
 // NewRequest builds a new request with initialized fields
 func NewRequest() *Request {
 	req := &Request{
-		next:   false,
+		next:   true,
 		Body:   make([]byte, 0),
 		Header: make(map[string]string),
 		Params: make(map[string]string),
 	}
-	req.Next = func() { req.next = true }
+	req.Reject = func() { req.next = false }
 	return req
 }
 

@@ -34,7 +34,7 @@ func (s *Stream) Build(context *hpack.Context) (*http.Request, error) {
 	for _, headers := range s.headers {
 		headerBytes = append(headerBytes, headers.Fragment...)
 	}
-	decoded, err := context.Decode(headerBytes)
+	decoded, err := context.Decode(headerBytes) // Header decompression
 	if err != nil {
 		return nil, err
 	}
@@ -49,4 +49,9 @@ func (s *Stream) Build(context *hpack.Context) (*http.Request, error) {
 	req := http.BuildRequest(decoded, data)
 
 	return req, nil
+}
+
+// ResToFrames converts a response to an array of frames
+func (s *Stream) ResToFrames(res *http.Response, context *hpack.Context) ([]frame.Frame, error) {
+	return nil, nil
 }

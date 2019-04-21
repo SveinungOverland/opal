@@ -79,5 +79,6 @@ func (c *Conn) serve() {
 	fmt.Printf("%+v\n", windowUpdateFrame)
 
 	headersFrame := frame.ReadFrame(c.tlsConn)
+	fmt.Printf("%+v\n", headersFrame.Flags.(*types.HeadersFlags))
 	fmt.Println(c.hpack.Decode((headersFrame.Payload.(*types.HeadersPayload).Fragment)))
 }

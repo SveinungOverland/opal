@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// Route represents a node in a http-router, and contains http-method-implementation
 type Route struct {
 	value      string
 	subRoutes  map[string]*Route
@@ -30,7 +31,7 @@ func NewRoot() *Route {
 	return newRoute("/")
 }
 
-func (r *Route) AppendRouter(router *router) {
+func (r *Route) AppendRouter(router *Router) {
 	leafRoute, _ := createOrFindRoute(r, router.basePath)
 	leafRoute.merge(router.root)
 }

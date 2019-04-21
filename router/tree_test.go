@@ -59,7 +59,7 @@ func TestCreateOrFindRoute(t *testing.T) {
 }
 
 // ---- HELPERS ----
-func getSearchTestRouter(basePath string) *router {
+func getSearchTestRouter(basePath string) *Router {
 	r := NewRouter(basePath)
 
 	r.Post("/")

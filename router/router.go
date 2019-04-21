@@ -1,7 +1,19 @@
 package router
 
-// Change back to Request and Response when ready ^^
-type HandleFunc func(req interface{} /* *Request */, res interface{} /* *Response */)
+type IRequest interface {
+	Param(string) string
+	Header(string) string
+	Body() []byte
+}
+
+type IResponse interface {
+	SetHeader(string, string)
+	SetBody([]byte)
+	SetStatus(int)
+}
+
+// HandleFunc is function that represents the handler for an HTTP-Endpoint
+type HandleFunc func(req *IRequest, res *IResponse)
 
 type router struct {
 	basePath string

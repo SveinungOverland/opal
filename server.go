@@ -1,4 +1,4 @@
-package core
+package opal
 
 import (
 	"crypto/tls"
@@ -48,6 +48,7 @@ func (s *Server) Listen(port int16) error {
 		conn, err := listener.Accept()
 		if err != nil {
 			s.nonBlockingErrorChanSend(err)
+			continue
 		}
 
 		c := s.createConn(conn)
@@ -59,7 +60,7 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 	c := &Conn{
 		server: s,
 		conn:   conn,
-		isTLS:  s.isTLS,
+		isTLS:  false,
 	}
 
 	if s.isTLS {

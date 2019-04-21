@@ -1,4 +1,4 @@
-package core
+package opal
 
 import (
 	"crypto/tls"

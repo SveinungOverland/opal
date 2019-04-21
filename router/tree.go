@@ -98,7 +98,7 @@ func search(root *Route, path string) (match bool, r *Route, params map[string]s
 		}
 
 		// No match found!
-		return false, curNode, nil, nil
+		return false, curNode, params, nil
 	}
 
 	return true, curNode, params, nil

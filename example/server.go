@@ -2,11 +2,11 @@ package main
 
 import (
 	"log"
-	"opal/core"
+	"opal"
 )
 
 func main() {
-	srv, err := core.NewTLSServer("./server.crt", "./server.key", nil)
+	srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
 	if err != nil {
 		log.Fatal(err)
 	}

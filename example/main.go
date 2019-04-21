@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
+	"opal/http"
 	"opal/router"
 )
 
-func handler(req interface{} /* *Request */, res interface{} /* *Response */) {
+func handler(req *http.Request, res *http.Response) {
 	fmt.Println("My cool and custom handler! :D")
 }
 
-func main() {
-	r := router.NewRouter("/")
+func test() {
+	mainRoot := router.NewRoot()
+
+	r := router.NewRouter("/user/university/connection")
 	r.Get("/aaa/bbb/ccc", handler)
 	r.Post("/aaa/bbb/dddd", handler)
 	r.Get("/aaa/bbb/dddd", handler)
@@ -20,11 +23,13 @@ func main() {
 	r.Post("/123/23/path", handler, handler, handler)
 	r.Put("/:lat/:lng/path/", handler)
 
-	root := r.Root()
+	mainRoot.AppendRouter(r)
+
+	root := mainRoot
 
 	fmt.Println(root.String())
 
-	match, route, params, fh := router.Search(root, "/123/23/path")
+	match, route, params, fh := root.Search("/123/23/path")
 	fmt.Println(match)
 	fmt.Println(route)
 	fmt.Println(params)

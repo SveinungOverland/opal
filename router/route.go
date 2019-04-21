@@ -4,10 +4,11 @@ import (
 	"fmt"
 )
 
-type route struct {
+// Route represents a node in a http-router, and contains http-method-implementation
+type Route struct {
 	value      string
-	subRoutes  map[string]*route
-	paramRoute *route
+	subRoutes  map[string]*Route
+	paramRoute *Route
 
 	static     bool
 	staticPath string
@@ -19,23 +20,27 @@ type route struct {
 	Patch  []HandleFunc
 }
 
-func newRoute(pathValue string) *route {
-	return &route{
+func newRoute(pathValue string) *Route {
+	return &Route{
 		value:     pathValue,
-		subRoutes: make(map[string]*route),
+		subRoutes: make(map[string]*Route),
 	}
 }
 
-func NewRoot() *route {
+func NewRoot() *Route {
 	return newRoute("/")
 }
 
-func (r *route) AppendRouter(router *router) {
+func (r *Route) AppendRouter(router *Router) {
 	leafRoute, _ := createOrFindRoute(r, router.basePath)
 	leafRoute.merge(router.root)
 }
 
-func (r *route) addHandlers(method string, funcs []HandleFunc) {
+func (r *Route) Search(path string) (match bool, route *Route, params map[string]string, fh *FileHandler) {
+	return search(r, path)
+}
+
+func (r *Route) addHandlers(method string, funcs []HandleFunc) {
 	switch method {
 	case "GET":
 		r.Get = funcs
@@ -50,7 +55,7 @@ func (r *route) addHandlers(method string, funcs []HandleFunc) {
 	}
 }
 
-func (r *route) GetHandlers(method string) []HandleFunc {
+func (r *Route) GetHandlers(method string) []HandleFunc {
 	switch method {
 	case "GET":
 		return r.Get
@@ -66,7 +71,7 @@ func (r *route) GetHandlers(method string) []HandleFunc {
 	return nil
 }
 
-func (r *route) merge(route *route) {
+func (r *Route) merge(route *Route) {
 	// Overwrite config
 	r.static = route.static
 	r.Get = route.Get
@@ -79,11 +84,11 @@ func (r *route) merge(route *route) {
 
 // ---- HELPERS ------
 
-func (r *route) String() string {
+func (r *Route) String() string {
 	return r.string(0)
 }
 
-func (r *route) string(depth int) string {
+func (r *Route) string(depth int) string {
 	var s string
 	for d := 0; d < depth; d++ {
 		s += " "

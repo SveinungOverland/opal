@@ -49,7 +49,7 @@ func (h *HeadersPayload) ReadPayload(payload []byte, length uint32, flags IFlags
 		index = 1
 	}
 	if flags.(*HeadersFlags).Priority {
-		h.StreamDependency = binary.BigEndian.Uint32(payload[index:][:4]) & 0x7FFF
+		h.StreamDependency = binary.BigEndian.Uint32(payload[index:][:4]) & 0x7FFFFFFF
 		h.StreamExclusive = payload[index]&0x80 != 0x00
 		h.PriorityWeight = payload[index+4]
 		index += 5

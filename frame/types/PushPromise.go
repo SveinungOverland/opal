@@ -36,7 +36,7 @@ func (p *PushPromisePayload) ReadPayload(payload []byte, length uint32, flags IF
 		p.PadLength = payload[0]
 		index = 1
 	}
-	p.StreamID = binary.BigEndian.Uint32(payload[index:][:4]) & 0x7FFF // To remove the reserved bit
+	p.StreamID = binary.BigEndian.Uint32(payload[index:][:4]) & 0x7FFFFFFF // To remove the reserved bit
 	p.Fragment = payload[:length-uint32(p.PadLength)][index+4:]
 }
 

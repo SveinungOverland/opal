@@ -17,7 +17,7 @@ type WindowUpdatePayload struct {
 }
 
 func (w *WindowUpdatePayload) ReadPayload(payload []byte, length uint32, flags IFlags) {
-	w.WindowSizeIncrement = binary.BigEndian.Uint32(payload[:4]) & 0x7FFF
+	w.WindowSizeIncrement = binary.BigEndian.Uint32(payload[:4]) & 0x7FFFFFFF
 }
 
 func (w WindowUpdatePayload) Bytes(flags IFlags) []byte {

@@ -57,7 +57,7 @@ func ReadFrame(r io.Reader) Frame {
 
 	identifierBuffer := make([]byte, 4)
 	r.Read(identifierBuffer)
-	identifier := binary.BigEndian.Uint32(identifierBuffer) & 0x7FFF // Bitwise 'and' is used to remove the very first bit, as this is a reserved bit
+	identifier := binary.BigEndian.Uint32(identifierBuffer) & 0x7FFFFFFF // Bitwise 'and' is used to remove the very first bit, as this is a reserved bit
 	frame.ID = identifier
 
 	payloadBuffer := make([]byte, length)

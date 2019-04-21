@@ -21,7 +21,7 @@ type PriorityPayload struct {
 func (p *PriorityPayload) ReadPayload(payload []byte, length uint32, flags IFlags) {
 
 	p.StreamExclusive = (payload[0] & 0x80) != 0x00
-	p.StreamDependency = binary.BigEndian.Uint32(payload[:4]) & 0x7FFF
+	p.StreamDependency = binary.BigEndian.Uint32(payload[:4]) & 0x7FFFFFFF
 
 	p.PriorityWeight = payload[4]
 }

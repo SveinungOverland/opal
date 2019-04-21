@@ -10,24 +10,6 @@ import (
 	"opal/frame/types"
 )
 
-type StreamState uint8
-
-const (
-	idle StreamState = iota + 1
-	reservedLocal
-	reservedRemote
-	open
-	halfClosedLocal
-	halfClosedRemote
-	closed
-)
-
-type Stream struct {
-	id        uint32
-	lastFrame *frame.Frame
-	state     StreamState
-}
-
 type Conn struct {
 	server        *Server
 	conn          net.Conn
@@ -79,5 +61,18 @@ func (c *Conn) serve() {
 	fmt.Printf("%+v\n", windowUpdateFrame)
 
 	headersFrame := frame.ReadFrame(c.tlsConn)
+
+	s := &Stream{
+		id:      headersFrame.ID,
+		headers: make([]*types.HeadersPayload, 0),
+	}
+	s.headers = append(s.headers, headersFrame.Payload.(*types.HeadersPayload))
+
+	req, err := s.Build(c.hpack)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(req)
+
 	fmt.Println(c.hpack.Decode((headersFrame.Payload.(*types.HeadersPayload).Fragment)))
 }

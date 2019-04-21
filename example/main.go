@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"opal/http"
 	"opal/router"
 )
 
-func handler(req interface{} /* *Request */, res interface{} /* *Response */) {
+func handler(req *http.Request, res *http.Response) {
 	fmt.Println("My cool and custom handler! :D")
 }
 
-func main() {
+func test() {
 	mainRoot := router.NewRoot()
 
 	r := router.NewRouter("/user/university/connection")

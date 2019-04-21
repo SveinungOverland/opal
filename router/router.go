@@ -1,25 +1,30 @@
 package router
 
-type IRequest interface {
+import (
+	"opal/http"
+)
+
+/* type Req interface {
 	Param(string) string
 	Header(string) string
 	Body() []byte
 }
 
-type IResponse interface {
+type Res interface {
 	SetHeader(string, string)
 	SetBody([]byte)
 	SetStatus(int)
-}
+} */
 
-// HandleFunc is function that represents the handler for an HTTP-Endpoint
-type HandleFunc func(req *IRequest, res *IResponse)
+// HandleFunc is function that represents the handler for a HTTP-Endpoint
+type HandleFunc func(req *http.Request, res *http.Response)
 
 type router struct {
 	basePath string
 	root     *Route
 }
 
+// NewRouter creates a new router to build routes with.
 func NewRouter(basePath string) *router {
 	return &router{
 		basePath: basePath,

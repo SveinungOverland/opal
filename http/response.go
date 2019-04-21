@@ -1,4 +1,4 @@
-package opal
+package http
 
 type Response struct {
 }

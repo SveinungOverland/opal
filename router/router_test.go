@@ -1,6 +1,7 @@
 package router
 
 import (
+	"opal/http"
 	"testing"
 )
 
@@ -11,23 +12,23 @@ func TestRouterMethods(t *testing.T) {
 	// Initialize all routes
 	var actual string
 
-	r.Post("/", func(req *IRequest, res *IResponse) {
+	r.Post("/", func(req *http.Request, res *http.Response) {
 		actual += "POST"
 	})
 
-	r.Get("/aaaa", func(req *IRequest, res *IResponse) {
+	r.Get("/aaaa", func(req *http.Request, res *http.Response) {
 		actual += "GET"
 	})
 
-	r.Put("/bbbb", func(req *IRequest, res *IResponse) {
+	r.Put("/bbbb", func(req *http.Request, res *http.Response) {
 		actual += "PUT"
 	})
 
-	r.Delete("/bbbb/dddd/", func(req *IRequest, res *IResponse) {
+	r.Delete("/bbbb/dddd/", func(req *http.Request, res *http.Response) {
 		actual += "DELETE"
 	})
 
-	r.Patch("/bbbb/DDDD/", func(req *IRequest, res *IResponse) {
+	r.Patch("/bbbb/DDDD/", func(req *http.Request, res *http.Response) {
 		actual += "PATCH"
 	})
 

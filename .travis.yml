@@ -2,6 +2,6 @@ sudo: required
 language: go
 
 go:
-  - 1.x
+  - 1.12
 
 script: go test -v ./...

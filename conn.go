@@ -73,7 +73,9 @@ func (c *Conn) serve() {
 				// Error, data frame is not associated with a stream
 				continue
 			}
-			stream.endStream = newFrame.Flags.(*types.DataFlags).EndStream
+			if newFrame.Flags.(*types.DataFlags).EndStream {
+				stream.state = HalfClosedRemote
+			}
 			if stream.data == nil {
 				stream.data = newFrame.Payload.(*types.DataPayload).Data
 			} else {
@@ -89,12 +91,12 @@ func (c *Conn) serve() {
 			if newFrame.Flags.(*types.HeadersFlags).EndHeaders {
 				streamState = Open
 			}
-			if newFrame.Flags.(*types.HeadersFlags).EndStream {
-				
+			if newFrame.Flags.(*types.HeadersFlags).EndStream && streamState == Open {
+				streamState = HalfClosedRemote
 			}
 			c.streams[newFrame.ID] = &Stream{
 				id:               newFrame.ID,
-				state: 			  Idle,
+				state: 			  streamState,
 				lastFrame:        &newFrame,
 				headers:          newFrame.Payload.(*types.HeadersPayload).Fragment,
 				streamDependency: newFrame.Payload.(*types.HeadersPayload).StreamDependency,

@@ -40,7 +40,7 @@ func handleStream(conn *Conn, s *Stream) {
 
 	// Build streams
 	// Decode headers
-	decodedHeaders, err := conn.hpack.EncodeMap(res.Header)
+	decodedHeaders, err := conn.hpack.EncodeMap(res.Header) // Header compression
 	if err != nil {
 
 	}

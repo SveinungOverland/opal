@@ -29,7 +29,7 @@ type Stream struct {
 	data      []byte
 }
 
-// Build builds and returns a Request based on recieved headers and data frames
+// toRequest builds and returns a Request based on recieved headers and data frames
 func (s *Stream) toRequest(context *hpack.Context) (*http.Request, error) {
 	// Merge and Decode headers
 	decoded, err := context.Decode(s.headers) // Header decompression

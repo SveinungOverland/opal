@@ -7,5 +7,8 @@ package opal
 
 func handleStream(conn *Conn, s *Stream) {
 	// asdf
-	req, err := s.Build(conn.hpack)
+	_, err := s.Build(conn.hpack)
+	if err != nil {
+		return 
+	}
 }

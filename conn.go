@@ -20,7 +20,9 @@ type Conn struct {
 	maxConcurrent uint32
 	streams       map[uint32]*Stream // map streamId to Stream instance
 	inChan		  chan *Stream // Channel for handling new ended stream
-	outChan		  chan *Stream // Channel for sending finished streams
+	outChan       chan *Stream // Channel for sending finished streams
+	outChanFrame  chan *frame.Frame // Channel for sending single Frame's not associated with a stream
+	settings      map[uint16]uint32
 }
 
 func (c *Conn) serve() {
@@ -46,8 +48,16 @@ func (c *Conn) serve() {
 		// This should not happen but error should be handled
 	}
 
-	//								(SettingId to SettingValue) Setting 1 is ContextSize
-	c.hpack = hpack.NewContext(settingsFrame.Payload.(*types.SettingsPayload).IDValuePair[1])
+	for key, value := range settingsFrame.Payload.(*types.SettingsPayload).IDValuePair {
+		if key >= 0x1 && key <= 0x6 {
+			// Any other key is out of range and is ignored
+			c.settings[key] = value
+		}
+	}
+
+
+	//                            Setting 1 is ContextSize
+	c.hpack = hpack.NewContext(c.settings[1])
 
 	// TODO: Change actual settings based on the frame above
 	settingsResponse := &frame.Frame{
@@ -63,7 +73,7 @@ func (c *Conn) serve() {
 	c.tlsConn.Write(settingsFrameBytes)
 
 	// Connection initiated and ready to receive header frames
-
+	// errors.EnhanceYourCalm
 	for {
 		newFrame := frame.ReadFrame(c.tlsConn)
 
@@ -77,7 +87,7 @@ func (c *Conn) serve() {
 			}
 			if newFrame.Flags.(*types.DataFlags).EndStream {
 				stream.state = HalfClosedRemote
-				go handleStream(c, stream)
+				c.inChan <- stream
 			}
 			if stream.data == nil {
 				stream.data = newFrame.Payload.(*types.DataPayload).Data
@@ -97,13 +107,17 @@ func (c *Conn) serve() {
 			if newFrame.Flags.(*types.HeadersFlags).EndStream && streamState == Open {
 				streamState = HalfClosedRemote
 			}
-			c.streams[newFrame.ID] = &Stream{
+			newStream := &Stream{
 				id:               newFrame.ID,
 				state: 			  streamState,
 				lastFrame:        &newFrame,
 				headers:          newFrame.Payload.(*types.HeadersPayload).Fragment,
 				streamDependency: newFrame.Payload.(*types.HeadersPayload).StreamDependency,
 				priorityWeight:   newFrame.Payload.(*types.HeadersPayload).PriorityWeight,
+			}
+			c.streams[newFrame.ID] = newStream
+			if newStream.state == HalfClosedRemote {
+				c.inChan <- newStream
 			}
 		case frame.PriorityType:
 			stream, ok := c.streams[newFrame.ID]

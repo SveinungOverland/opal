@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"opal/router"
+	"opal/frame"
 )
 
 type Server struct {
@@ -61,7 +62,18 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 		server: s,
 		conn:   conn,
 		isTLS:  false,
+		inChan: make(chan *Stream, 10),
 		outChan: make(chan *Stream, 10),
+		outChanFrame: make(chan *frame.Frame, 5),
+		settings: map[uint16]uint32{
+			// !ok value should be treated as no-limit
+			1: 4096, // Header Table Size
+			2: 1, // Enable Push
+			//3: no-limit,  // Max Concurrent Streams
+			4: 65535, // Initial Window Size
+			5: 16384, // Max Frame Size
+			//6: no-limit, // Max Header List Size
+		},
 	}
 
 	if s.isTLS {

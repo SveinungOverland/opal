@@ -76,6 +76,7 @@ func (c *Conn) serve() {
 			}
 			if newFrame.Flags.(*types.DataFlags).EndStream {
 				stream.state = HalfClosedRemote
+				go handleStream(c, stream)
 			}
 			if stream.data == nil {
 				stream.data = newFrame.Payload.(*types.DataPayload).Data
@@ -105,16 +106,47 @@ func (c *Conn) serve() {
 			}
 		case frame.PriorityType:
 			stream, ok := c.streams[newFrame.ID]
-			if !ok || newFrame.ID == 0 {	
+			if newFrame.ID == 0 {	
 				// Error, a priority frame should be .... with a stream
+			}
+			if !ok {
+				stream = &Stream{
+					id: newFrame.ID,
+					state: Idle,
+					lastFrame: &newFrame,
+					headers: make([]byte, 0),
+				}
+				c.streams[newFrame.ID] = stream
 			}
 			stream.priorityWeight = newFrame.Payload.(*types.PriorityPayload).PriorityWeight
 			stream.streamDependency = newFrame.Payload.(*types.PriorityPayload).StreamDependency
 		case frame.RstStreamType:
-
+			stream, ok := c.streams[newFrame.ID]
+			if !ok {
+				// Error
+			}
+			stream.state = Closed
+			// TODO HANDLE ERROR CODE SENT IN FRAME
 		case frame.SettingsType:
 		case frame.PushPromiseType:
 		case frame.PingType:
+			if newFrame.ID != 0 || newFrame.Length != 8 {
+				// ERROR
+				pingFrame := &frame.Frame{
+					ID: 0,
+					Type: frame.PingType,
+					Length: 8,
+					Flags: &types.PingFlags{
+						Ack: true,
+					},
+					Payload: newFrame.Payload,
+				}
+				// TODO: Might crash, check if tlsConn is blocking
+				c.tlsConn.Write(pingFrame.ToBytes())
+			}
+			if !newFrame.Flags.(*types.PingFlags).Ack {
+
+			}
 		case frame.GoAwayType:
 		case frame.WindowUpdateType:
 			// Update the window size
@@ -127,7 +159,9 @@ func (c *Conn) serve() {
 			if !ok || newFrame.ID == 0 {
 				// Error continuation should always only follow a header
 			}
-			stream.endHeaders = newFrame.Flags.(*types.ContinuationFlags).EndHeaders
+			if newFrame.Flags.(*types.ContinuationFlags).EndHeaders {
+				stream.state = Open
+			}
 			stream.headers = append(stream.headers, newFrame.Payload.(*types.ContinuationPayload).HeaderFragment...)
 		}
 	}

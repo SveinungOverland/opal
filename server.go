@@ -61,7 +61,7 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 		server: s,
 		conn:   conn,
 		isTLS:  false,
-		outChan: make(chan*Stream, 10),
+		outChan: make(chan *Stream, 10),
 	}
 
 	if s.isTLS {

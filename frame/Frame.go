@@ -33,7 +33,7 @@ const (
 	ContinuationType
 )
 
-// FrameStruct describes the data that is needed to receive and send a frame
+// Frame describes the data that is needed to receive and send a frame
 type Frame struct {
 	// Remember to ignore the first bit of this field when reading
 	ID      uint32

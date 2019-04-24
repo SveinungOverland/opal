@@ -10,17 +10,17 @@ import (
 type StreamState uint8
 
 const (
-	idle StreamState = iota + 1
-	reservedLocal
-	reservedRemote
-	open
-	halfClosedLocal
-	halfClosedRemote
-	closed
+	Idle StreamState = iota + 1
+	ReservedLocal
+	ReservedRemote
+	Open
+	HalfClosedLocal
+	HalfClosedRemote
+	Closed
 )
 
 type Stream struct {
-	id        		uint32
+	id               uint32
 	streamDependency uint32
 	priorityWeight 	byte
 	lastFrame *frame.Frame

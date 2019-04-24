@@ -20,7 +20,8 @@ type Conn struct {
 	maxConcurrent uint32
 	streams       map[uint32]*Stream // map streamId to Stream instance
 	inChan		  chan *Stream // Channel for handling new ended stream
-	outChan		  chan *Stream // Channel for sending finished streams
+	outChan       chan *Stream // Channel for sending finished streams
+	outChanFrame  chan *frame.Frame // Channel for sending single Frame's not associated with a stream
 }
 
 func (c *Conn) serve() {
@@ -77,7 +78,7 @@ func (c *Conn) serve() {
 			}
 			if newFrame.Flags.(*types.DataFlags).EndStream {
 				stream.state = HalfClosedRemote
-				go handleStream(c, stream)
+				c.inChan <- stream
 			}
 			if stream.data == nil {
 				stream.data = newFrame.Payload.(*types.DataPayload).Data
@@ -97,13 +98,17 @@ func (c *Conn) serve() {
 			if newFrame.Flags.(*types.HeadersFlags).EndStream && streamState == Open {
 				streamState = HalfClosedRemote
 			}
-			c.streams[newFrame.ID] = &Stream{
+			newStream := &Stream{
 				id:               newFrame.ID,
 				state: 			  streamState,
 				lastFrame:        &newFrame,
 				headers:          newFrame.Payload.(*types.HeadersPayload).Fragment,
 				streamDependency: newFrame.Payload.(*types.HeadersPayload).StreamDependency,
 				priorityWeight:   newFrame.Payload.(*types.HeadersPayload).PriorityWeight,
+			}
+			c.streams[newFrame.ID] = newStream
+			if newStream.state == HalfClosedRemote {
+				c.inChan <- newStream
 			}
 		case frame.PriorityType:
 			stream, ok := c.streams[newFrame.ID]

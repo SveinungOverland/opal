@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"opal/router"
+	"opal/frame"
 )
 
 type Server struct {
@@ -61,7 +62,9 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 		server: s,
 		conn:   conn,
 		isTLS:  false,
+		inChan: make(chan *Stream, 10),
 		outChan: make(chan *Stream, 10),
+		outChanFrame: make(chan *frame.Frame, 5),
 	}
 
 	if s.isTLS {

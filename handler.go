@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"opal/http"
 	"opal/router"
+	"strconv"
 )
 
 
@@ -77,12 +78,21 @@ func serveRequest(conn *Conn, reqDoneChan chan responseWrapper, req *http.Reques
 		res.NotFound() // Neither route or file found
 	}
 
+	// Set Content-Length if body is provided
+	contentLength := len(res.Body)
+	if (contentLength > 0) {
+		res.Header["Content-Length"] = strconv.Itoa(contentLength)
+	}
+
 	reqDoneChan <- responseWrapper{res, streamID}
 }
 
 
 func sendResponse(conn *Conn, s *Stream, res *http.Response) error {
 	
+	// TODO: Implement push promise requests
+	_ := res.PushRequests()
+
 	// Decode headers
 	decodedHeaders, err := conn.hpack.EncodeMap(res.Header) // Header compression
 	if err != nil {

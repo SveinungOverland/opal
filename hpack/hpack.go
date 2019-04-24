@@ -1,9 +1,13 @@
 package hpack
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
+
+const defaultDynTabSize = 4096
 
 type Context struct {
-	dynT    *dynamicTable
 	decoder *decoder
 	encoder *encoder
 }
@@ -11,13 +15,16 @@ type Context struct {
 // NewContext creates a new hpack-context. It initializes a new dynamic table with a given
 // max-size.
 func NewContext(dynamicTableMaxSize uint32) *Context {
-	// Initialize dynamic table
+	
+	// Initialize Decoder
 	dynT := newDynamicTable(dynamicTableMaxSize)
 	decoder := newDecoder(dynT)
-	encoder := newEncoder(dynT)
+
+	// Initialize Encoder
+	encodeDynt := newDynamicTable(dynamicTableMaxSize)
+	encoder := newEncoder(encodeDynt)
 
 	return &Context{
-		dynT:    dynT,
 		decoder: decoder,
 		encoder: encoder,
 	}
@@ -46,7 +53,7 @@ func (c *Context) Encode(hfs []*HeaderField) ([]byte, error) {
 func (c *Context) EncodeMap(headers map[string]string) ([]byte, error) {
 	var bytes []byte
 	for k, v := range headers {
-		buf, err := c.encoder.EncodeField(&HeaderField{Name: k, Value: v})
+		buf, err := c.encoder.EncodeField(&HeaderField{Name: strings.ToLower(k), Value: v})
 		if err != nil {
 			return bytes, err
 		}
@@ -55,17 +62,25 @@ func (c *Context) EncodeMap(headers map[string]string) ([]byte, error) {
 	return bytes, nil
 }
 
-// DynamicTable returns a deep copy of the HeaderFields in the dynamic table
-func (c *Context) DynamicTable() []*HeaderField {
-	hfs := make([]*HeaderField, len(c.dynT.HeaderFields))
-	copy(hfs, c.dynT.HeaderFields)
+// DecoderDynamicTable returns a deep copy of the HeaderFields in the decoder's dynamic table
+func (c *Context) DecoderDynamicTable() []*HeaderField {
+	hfs := make([]*HeaderField, len(c.decoder.dynTab.HeaderFields))
+	copy(hfs, c.decoder.dynTab.HeaderFields)
 	return hfs
 }
 
-func (c *Context) DynamicTableString() string {
+// EncoderDynamicTable returns a deep copy of the HeaderFields in the encoder's dynamic table
+func (c *Context) EncoderDynamicTable() []*HeaderField {
+	hfs := make([]*HeaderField, len(c.encoder.dynTab.HeaderFields))
+	copy(hfs, c.encoder.dynTab.HeaderFields)
+	return hfs
+}
+
+// dynamicTableString returns a string visualizing the state of a dynamic table
+func (c *Context) dynamicTableString(dynT dynamicTable) string {
 	var output string
-	output += fmt.Sprintf("Table size: %d\n", c.dynT.size)
-	for i, hf := range c.dynT.HeaderFields {
+	output += fmt.Sprintf("Table size: %d\n", dynT.size)
+	for i, hf := range dynT.HeaderFields {
 		output += fmt.Sprintf("%d [s = %d] - %s\n", i, hf.size(), hf.String())
 	}
 	return output

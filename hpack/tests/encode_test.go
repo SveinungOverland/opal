@@ -53,8 +53,8 @@ func encodeDecodeTest(t *testing.T, test hpackTest) {
 	}
 
 	// Compare dynamic tables
-	dynTabC1 := c1.DynamicTable()
-	dynTabC2 := c2.DynamicTable()
+	dynTabC1 := c1.EncoderDynamicTable()
+	dynTabC2 := c2.DecoderDynamicTable()
 	// Check if decoded headers are equal
 	if diff := deep.Equal(dynTabC1, dynTabC2); diff != nil {
 		t.Error(diff)

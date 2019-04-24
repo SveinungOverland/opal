@@ -38,7 +38,7 @@ func testContextDecode(t *testing.T, context *hpack.Context, testData []hpackTes
 		}
 
 		// Check if dynamic table is equal to expected
-		dynTabHfs := context.DynamicTable()
+		dynTabHfs := context.DecoderDynamicTable()
 		if diff := deep.Equal(dynTabHfs, test.expectedDynamicTable); diff != nil {
 			t.Error(diff)
 		}

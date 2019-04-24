@@ -29,7 +29,7 @@ func test() {
 
 	fmt.Println(root.String())
 
-	match, route, params, fh := root.Search("/123/23/path")
+	match, route, params, fh := root.Search("/user/university/connection/image")
 	fmt.Println(match)
 	fmt.Println(route)
 	fmt.Println(params)

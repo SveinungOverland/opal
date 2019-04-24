@@ -19,7 +19,8 @@ type Conn struct {
 	isTLS         bool
 	maxConcurrent uint32
 	streams       map[uint32]*Stream // map streamId to Stream instance
-	outChan		  chan *Stream
+	inChan		  chan *Stream // Channel for handling new ended stream
+	outChan		  chan *Stream // Channel for sending finished streams
 }
 
 func (c *Conn) serve() {

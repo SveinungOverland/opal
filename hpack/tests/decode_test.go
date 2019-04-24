@@ -46,7 +46,7 @@ func testContextDecode(t *testing.T, context *hpack.Context, testData []hpackTes
 }
 
 func hf(name string, value string) *hpack.HeaderField {
-	return &hpack.HeaderField{name, value}
+	return &hpack.HeaderField{Name: name, Value: value}
 }
 
 // --------- TEST DATA ------------

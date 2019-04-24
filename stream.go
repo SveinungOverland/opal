@@ -23,8 +23,8 @@ type Stream struct {
 	id        uint32
 	lastFrame *frame.Frame
 	state     StreamState
-	headers   []*types.HeadersPayload
-	data      []*types.DataPayload
+	headers   []byte
+	data      []byte
 }
 
 // Build builds and returns a Request based on recieved headers and data frames

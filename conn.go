@@ -63,17 +63,6 @@ func (c *Conn) serve() {
 	headersFrame := frame.ReadFrame(c.tlsConn)
 	fmt.Printf("%+v\n", headersFrame.Flags.(*types.HeadersFlags))
 
-	s := &Stream{
-		id:      headersFrame.ID,
-		headers: make([]*types.HeadersPayload, 0),
-	}
-	s.headers = append(s.headers, headersFrame.Payload.(*types.HeadersPayload))
-
-	req, err := s.Build(c.hpack)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(req)
 
 	fmt.Println(c.hpack.Decode((headersFrame.Payload.(*types.HeadersPayload).Fragment)))
 }

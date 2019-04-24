@@ -2,9 +2,9 @@ package opal
 
 import (
 	"opal/frame"
-	"opal/frame/types"
 	"opal/hpack"
 	"opal/http"
+	"strings"
 )
 
 type StreamState uint8
@@ -20,7 +20,9 @@ const (
 )
 
 type Stream struct {
-	id        uint32
+	id        		uint32
+	streamDependency uint32
+	priorityWeight byte
 	lastFrame *frame.Frame
 	state     StreamState
 	headers   []byte
@@ -30,23 +32,24 @@ type Stream struct {
 // Build builds and returns a Request based on recieved headers and data frames
 func (s *Stream) Build(context *hpack.Context) (*http.Request, error) {
 	// Merge and Decode headers
-	var headerBytes []byte
-	for _, headers := range s.headers {
-		headerBytes = append(headerBytes, headers.Fragment...)
-	}
-	decoded, err := context.Decode(headerBytes) // Header decompression
+	decoded, err := context.Decode(s.headers) // Header decompression
 	if err != nil {
 		return nil, err
 	}
 
-	// Merge data
-	var data []byte
-	for _, dataPayload := range s.data {
-		data = append(data, dataPayload.Data...)
+	// Build request
+	req := http.NewRequest()
+
+	// Parse Headers
+	for _, hf := range decoded {
+		if strings.HasPrefix(hf.Name, ":") {
+			req.parsePseudoHeader(hf.Name, hf.Value)
+		} else {
+			req.Header[hf.Name] = hf.Value
+		}
 	}
 
-	// Build request
-	req := http.BuildRequest(decoded, data)
+	req.Body = s.data
 
 	return req, nil
 }

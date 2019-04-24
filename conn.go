@@ -18,7 +18,7 @@ type Conn struct {
 	windowSize    uint32
 	isTLS         bool
 	maxConcurrent uint32
-	streams       map[uint32]Stream // map streamId to Stream instance
+	streams       map[uint32]*Stream // map streamId to Stream instance
 }
 
 func (c *Conn) serve() {
@@ -44,6 +44,7 @@ func (c *Conn) serve() {
 		// This should not happen but error should be handled
 	}
 
+	//								(SettingId to SettingValue) Setting 1 is ContextSize
 	c.hpack = hpack.NewContext(settingsFrame.Payload.(*types.SettingsPayload).IDValuePair[1])
 
 	// TODO: Change actual settings based on the frame above
@@ -66,20 +67,48 @@ func (c *Conn) serve() {
 
 		switch newFrame.Type {
 		case frame.DataType:
+			// Data should always be associated with a stream
+			stream, ok := c.streams[newFrame.ID]
+			if !ok {
+				// Error, data frame is not associated with a stream
+				continue
+			}
+			stream.endStream = newFrame.Flags.(*types.DataFlags).EndStream
+			if stream.data == nil {
+				stream.data = newFrame.Payload.(*types.DataPayload).Data
+			} else {
+				stream.data = append(stream.data, newFrame.Payload.(*types.DataPayload).Data...)
+			}
 		case frame.HeadersType:
 			// New stream
 			if newFrame.ID == 0 {
 				// Error, a header should always be associated with a stream
+				continue
 			}
-			c.streams[newFrame.ID] = Stream{
+			streamState := Idle
+			if newFrame.Flags.(*types.HeadersFlags).EndHeaders {
+				streamState = Open
+			}
+			if newFrame.Flags.(*types.HeadersFlags).EndStream {
+				
+			}
+			c.streams[newFrame.ID] = &Stream{
 				id:               newFrame.ID,
-				headers:          newFrame.Payload.(*types.HeadersPayload).Fragment,
+				state: 			  Idle,
 				lastFrame:        &newFrame,
+				headers:          newFrame.Payload.(*types.HeadersPayload).Fragment,
 				streamDependency: newFrame.Payload.(*types.HeadersPayload).StreamDependency,
 				priorityWeight:   newFrame.Payload.(*types.HeadersPayload).PriorityWeight,
 			}
 		case frame.PriorityType:
+			stream, ok := c.streams[newFrame.ID]
+			if !ok || newFrame.ID == 0 {	
+				// Error, a priority frame should be .... with a stream
+			}
+			stream.priorityWeight = newFrame.Payload.(*types.PriorityPayload).PriorityWeight
+			stream.streamDependency = newFrame.Payload.(*types.PriorityPayload).StreamDependency
 		case frame.RstStreamType:
+
 		case frame.SettingsType:
 		case frame.PushPromiseType:
 		case frame.PingType:
@@ -90,6 +119,13 @@ func (c *Conn) serve() {
 				c.windowSize += newFrame.Payload.(*types.WindowUpdatePayload).WindowSizeIncrement
 			}
 		case frame.ContinuationType:
+			// Append headerfragment
+			stream, ok := c.streams[newFrame.ID]
+			if !ok || newFrame.ID == 0 {
+				// Error continuation should always only follow a header
+			}
+			stream.endHeaders = newFrame.Flags.(*types.ContinuationFlags).EndHeaders
+			stream.headers = append(stream.headers, newFrame.Payload.(*types.ContinuationPayload).HeaderFragment...)
 		}
 	}
 

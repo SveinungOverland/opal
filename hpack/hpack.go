@@ -29,10 +29,24 @@ func (c *Context) Decode(bytes []byte) ([]*HeaderField, error) {
 	return c.decoder.Decode(bytes)
 }
 
+// Encode encodes a set of headers
 func (c *Context) Encode(hfs []*HeaderField) ([]byte, error) {
 	var bytes []byte
 	for _, hf := range hfs {
 		buf, err := c.encoder.EncodeField(hf)
+		if err != nil {
+			return bytes, err
+		}
+		bytes = append(bytes, buf...)
+	}
+	return bytes, nil
+}
+
+// EncodeHeaders encodes a set of headers from a map
+func (c *Context) EncodeMap(headers map[string]string) ([]byte, error) {
+	var bytes []byte
+	for k, v := range headers {
+		buf, err := c.encoder.EncodeField(&HeaderField{Name: k, Value: v})
 		if err != nil {
 			return bytes, err
 		}

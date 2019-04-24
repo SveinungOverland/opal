@@ -6,6 +6,10 @@ type Response struct {
 	Header map[string]string
 }
 
+func (r *Response) NotFound() {
+	r.Status = 404
+}
+
 func NewResponse() *Response {
 	res := &Response{
 		Status: 200,
@@ -13,5 +17,11 @@ func NewResponse() *Response {
 		Header: make(map[string]string),
 	}
 	res.Header["Content-Type"] = "text/plain"
+	return res
+}
+
+func new404Response() *Response {
+	res := NewResponse()
+	res.Status = 404
 	return res
 }

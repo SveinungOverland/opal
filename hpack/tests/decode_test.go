@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"opal/hpack"
 	"testing"
+	"fmt"
 	"github.com/go-test/deep"
 )
 
@@ -21,11 +22,11 @@ func TestDecode02(t *testing.T) {
 	testContextDecode(t, context, testData)
 }
 
-/* func TestFun(t *testing.T) {
+func TestFun(t *testing.T) {
 	//bytes := []byte{95,135, 73, 124, 165, 138, 232 ,25, 170}
 	//bytes := []byte{141, 95, 135, 73, 124, 165, 138, 232, 25, 170}
 	bytes := []byte{95, 135, 73, 124, 165, 138 ,232, 25 ,170 ,141}
-	//bytes := []byte{190, 141}
+	bytes2 := []byte{190, 141}
 	c1 := hpack.NewDecoder(65536)
 	hfs, err := c1.Decode(bytes)
 	if err != nil {
@@ -34,7 +35,15 @@ func TestDecode02(t *testing.T) {
 	for _, hf := range hfs {
 		fmt.Printf("%s : %s", hf.Name, hf.Value)
 	}
-} */
+
+	hfs, err = c1.Decode(bytes2)
+	if err != nil {
+		t.Error(err)
+	}
+	for _, hf := range hfs {
+		fmt.Printf("%s : %s", hf.Name, hf.Value)
+	}
+}
 
 // ----- HELPERS -------
 

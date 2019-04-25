@@ -134,7 +134,8 @@ func sendResponse(conn *Conn, s *Stream, res *http.Response) {
 	encodedHeaders := conn.hpack.EncodeMap(res.Header) // Header compression
 	
 	s.headers = encodedHeaders
-	s.data = res.Body
+	copy(s.data, res.Body)
+	//s.data = res.Body
 	
 	// Send stream to outChannel
 	conn.outChan <- s

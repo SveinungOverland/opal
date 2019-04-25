@@ -95,7 +95,7 @@ func WriteStream(c *Conn) {
 			if i == dataFramesNeeded-1 {
 				dataFlags.EndStream = true
 			}
-			data := s.data[i*maxPayloadSize:][:maxPayloadSize*i]
+			data := s.data[i*maxPayloadSize:] // [:maxPayloadSize*i]
 			dataFrame := &frame.Frame{
 				ID: s.id,
 				Type: frame.DataType,

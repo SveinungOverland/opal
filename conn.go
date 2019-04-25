@@ -73,9 +73,11 @@ func (c *Conn) serve() {
 		},
 	}
 	// TODO: Write settingsResponse to client to acknowledge settings frame
-	settingsFrameBytes := settingsResponse.ToBytes()
-	c.tlsConn.Write(settingsFrameBytes)
-
+	c.outChanFrame <- settingsResponse
+	
+	go serveStreamHandler(c) // Starting go-routine that is responsible for handling requests when streams are done
+	go WriteStream(c) // Starting go-routine that is responsible for handling handled requests that should be written back to client
+	
 	// Connection initiated and ready to receive header frames
 	// errors.EnhanceYourCalm
 	for {

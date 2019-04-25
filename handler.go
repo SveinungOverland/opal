@@ -33,6 +33,9 @@ func serveStreamHandler(conn *Conn) {
 	defer close(reqDoneChan)
 	defer close(pushReqChan)
 
+	// Check if server push is enabled
+	serverPushEnabled := conn.settings[2] != 0
+
 	for {
 		select {
 		// Check for and handle incoming stream
@@ -42,7 +45,12 @@ func serveStreamHandler(conn *Conn) {
 				fmt.Println(err)
 				continue
 			}
-			req.OnPush = pushReqHandler(conn, pushReqChan)
+			
+			// Handle server push
+			if (serverPushEnabled) {
+				req.OnPush = pushReqHandler(conn, pushReqChan)
+			}
+			
 			go handleRequest(conn, reqDoneChan, req, s.id) // Serve and build response
 
 		// Check for and handle incoming server push requests

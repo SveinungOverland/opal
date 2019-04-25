@@ -45,6 +45,7 @@ func serveStreamHandler(conn *Conn) {
 				fmt.Println(err)
 				continue
 			}
+			fmt.Printf("Recieved Request: %s - %s\n", req.URI, req.Method)
 			
 			// Handle server push
 			if (serverPushEnabled) {
@@ -70,6 +71,8 @@ func serveStreamHandler(conn *Conn) {
 				fmt.Printf("Stream %d is no longer available in stream-map. Throwing away response.\n", resWrp.streamID)
 				continue
 			}
+			fmt.Printf("Sending response: %d\n", resWrp.res.Status)
+			fmt.Println(resWrp.res.Body)
 			sendResponse(conn, stream, resWrp.res)
 		}
 	}

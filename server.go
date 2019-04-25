@@ -57,6 +57,7 @@ func (s *Server) Listen(port int16) error {
 	}
 }
 
+// Register registeres a router to the server
 func (s *Server) Register(r *router.Router) {
 	s.rootRoute.AppendRouter(r)
 }

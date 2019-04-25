@@ -100,9 +100,7 @@ func serveRequest(conn *Conn, req *http.Request) *http.Response{
 	res := http.NewResponse()
 
 	// Find route and build response
-	fmt.Printf("URI: %s\n", req.URI)
 	match, route, params, fh := conn.server.rootRoute.Search(req.URI)
-	fmt.Printf("Found match: %t\n", match)
 	if match {
 		// Found route, run handlers and build response
 		req.Params = params
@@ -131,18 +129,13 @@ func serveRequest(conn *Conn, req *http.Request) *http.Response{
 
 // SendResponse encodes a response and sends it to a connection's out-channel
 func sendResponse(conn *Conn, s *Stream, res *http.Response) {
-	fmt.Println("Setting response")
-	fmt.Println(res.Body)
+	setResPsudeoHeaders(res)
 
 	// Encode headers
 	encodedHeaders := conn.hpack.EncodeMap(res.Header) // Header compression
 	
 	s.headers = encodedHeaders
-	//copy(s.data, res.Body)
 	s.data = res.Body
-
-	fmt.Println("Response data:")
-	fmt.Println(s.data)
 	
 	// Send stream to outChannel
 	conn.outChan <- s
@@ -157,7 +150,6 @@ func handleRoute(handlers []router.HandleFunc, req *http.Request, res *http.Resp
 			break
 		}
 		handler(req, res)
-		fmt.Printf("After %v", res.Body)
 	}
 }
 

@@ -3,7 +3,6 @@ package hpack
 import (
 	"opal/hpack"
 	"testing"
-
 	"github.com/go-test/deep"
 )
 
@@ -24,6 +23,35 @@ func TestEncodeDecodeLongHeaders(t *testing.T) {
 	longTests := getLongTestData()
 	for _, test := range longTests {
 		encodeDecodeTest(t, test)
+	}
+}
+
+func TestEncodeDecodeMap(t *testing.T) {
+	headers := map[string]string{
+		":authority": "https://example.com",
+		":method": "GET",
+		"cookie": "token: Bearer 32fd9oifjs90.23disjasod23.asdf2390j.adsfj0293rj",
+		"content-type": "application/json",
+		"content-length": "1234",
+	}
+
+	// Create encoder
+	c1 := hpack.NewContext(256, 256)
+	encodedHeaders := c1.EncodeMap(headers)
+
+	// Create decoder
+	c2 := hpack.NewContext(256, 256)
+	actual, err := c2.Decode(encodedHeaders)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check if decoded header values match values in header-map
+	for _, hf := range actual {
+		val, ok := headers[hf.Name]
+		if !ok || val != hf.Value {
+			t.Error(err)
+		}
 	}
 }
 

@@ -39,7 +39,8 @@ func (res *Response) File(path string, contentType string) {
 func (res *Response) HTML(path string, templateData interface{}) {
 	temp, err := template.ParseFiles(path)
 	if err != nil {
-		fmt.Println("Error: ", err)
+		fmt.Println("Error parsing html file: ", err)
+		return
 	}
 
 	var tpl bytes.Buffer

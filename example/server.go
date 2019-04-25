@@ -12,7 +12,7 @@ import (
 
 func main() {
 	go func() {
-		fmt.Println("PPROF listening on :6060")
+		fmt.Println("PPROF listening on :6060, use /debug/pprof for overview and /debug/pprof/profile?seconds=20 for CPU-profiling (20s)")
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
 

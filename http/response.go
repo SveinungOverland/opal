@@ -91,7 +91,7 @@ func NewResponse() *Response {
 		Body:   make([]byte, 0),
 		Header: make(map[string]string),
 	}
-	res.Header["Content-Type"] = "text/plain; charset=utf-8"
+	res.Header["content-type"] = "text/plain; charset=utf-8"
 	return res
 }
 

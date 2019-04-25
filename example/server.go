@@ -18,6 +18,11 @@ func main() {
 		res.Body = []byte("Hello World")
 	})
 
+	r.Get("/site", func(req *http.Request, res *http.Response) {
+		res.Body = []byte("<html><body><h4>Hello World! :D</h4><a href=\"\\\">Click here</a></body></html>")	
+		res.Header["content-type"] = "text/html; charset=utf-8"
+	})
+
 	srv.Register(r)
 
 	log.Fatal(srv.Listen(8080))

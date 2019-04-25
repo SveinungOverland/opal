@@ -65,6 +65,9 @@ func parsePseudoHeader(req *http.Request, headerName string, value string) {
 	case ":method":
 		req.Method = value
 	case ":path":
+		if req.URI != "" {
+			return
+		}
 		uriValues := strings.SplitN(value, "?", 2)
 		req.URI = uriValues[0]
 		if len(uriValues) > 1 {

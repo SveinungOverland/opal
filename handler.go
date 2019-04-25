@@ -6,7 +6,9 @@ import (
 	"opal/router"
 	"opal/frame"
 	"opal/frame/types"
+	"opal/hpack"
 	"strconv"
+	"strings"
 )
 
 
@@ -71,8 +73,6 @@ func serveStreamHandler(conn *Conn) {
 				fmt.Printf("Stream %d is no longer available in stream-map. Throwing away response.\n", resWrp.streamID)
 				continue
 			}
-			fmt.Printf("Sending response: %d\n", resWrp.res.Status)
-			fmt.Println(resWrp.res.Body)
 			sendResponse(conn, stream, resWrp.res)
 		}
 	}
@@ -122,9 +122,8 @@ func serveRequest(conn *Conn, req *http.Request) *http.Response{
 	// Set Content-Length if body is provided
 	contentLength := len(res.Body)
 	if (contentLength > 0) {
-		res.Header["Content-Length"] = strconv.Itoa(contentLength)
+		res.Header["content-length"] = strconv.Itoa(contentLength)
 	}
-
 	return res
 }
 
@@ -132,14 +131,23 @@ func serveRequest(conn *Conn, req *http.Request) *http.Response{
 
 // SendResponse encodes a response and sends it to a connection's out-channel
 func sendResponse(conn *Conn, s *Stream, res *http.Response) {
-	setResPsudeoHeaders(res)
+	fmt.Printf("Sending response: %d\n", res.Status)
+
+	// Initialize headers to send
+	hfs := make([]*hpack.HeaderField, 0)
+	hfs = append(hfs, &hpack.HeaderField{Name: ":status", Value: strconv.Itoa(int(res.Status))})
+
+	for k, v := range res.Header {
+		hfs = append(hfs, &hpack.HeaderField{Name: strings.ToLower(k), Value: v})
+	}
+
 
 	// Encode headers
-	encodedHeaders := conn.hpack.EncodeMap(res.Header) // Header compression
+	encodedHeaders := conn.hpack.Encode(hfs) // Header compression
 	
 	s.headers = encodedHeaders
 	s.data = res.Body
-	
+
 	// Send stream to outChannel
 	conn.outChan <- s
 }
@@ -166,7 +174,7 @@ func handleFile(res *http.Response, fh *router.FileHandler) {
 		res.Body = []byte(err.Error())
 	} else {
 		res.Body = file // File found, return file
-		res.Header["Content-Type"] = fh.MimeType
+		res.Header["content-type"] = fh.MimeType
 	}
 }
 
@@ -180,11 +188,12 @@ func pushReqHandler(conn *Conn, pushReqChan chan pushReqWrapper) func(req *http.
 
 // NewPushPromise creates a new PushPromiseFrame based on a given request
 func newPushPromise(conn *Conn, req *http.Request) *frame.Frame {
-	// Add request pseudo-headers to Header map
-	setReqPsuedoHeaders(req)
+
+	// Initialize request headers
+	hfs := initReqHFs(req)
 
 	// Encode headers
-	encodedHeaders := conn.hpack.EncodeMap(req.Header) // Header compression
+	encodedHeaders := conn.hpack.Encode(hfs) // Header compression
 	payloadLength := uint32(len(encodedHeaders))
 
 	// Choose next stream identifier
@@ -207,18 +216,19 @@ func newPushPromise(conn *Conn, req *http.Request) *frame.Frame {
 	return pushFrame
 }
 
-// SetReqPsuedoHeaders adds the request's pseudo-headers to the header-map
-func setReqPsuedoHeaders(req *http.Request) {
-	req.Header[":method"] = req.Method
-	req.Header[":authority"] = req.Authority
-	req.Header[":path"] = req.URI
+// InitReqHFs converts a request into a list of headerfields. Psuedo-Headerfields will come first.
+func initReqHFs(req *http.Request) []*hpack.HeaderField {
+	hfs := make([]*hpack.HeaderField, 0)
+	hfs = append(hfs, &hpack.HeaderField{Name: ":method", Value: req.Method})
+	hfs = append(hfs, &hpack.HeaderField{Name: ":authority", Value: req.Authority})
+	hfs = append(hfs, &hpack.HeaderField{Name: ":path", Value: req.URI})
 
 	if req.Scheme != "" {
-		req.Header[":scheme"] = req.Scheme
+		hfs = append(hfs, &hpack.HeaderField{Name: ":scheme", Value: req.Scheme})
 	}
-}
-
-// SetResPsudeoHeaders adds the response's pseudo-headers to the header-map
-func setResPsudeoHeaders(res *http.Response) {
-	res.Header[":status"] = strconv.Itoa(int(res.Status))
+	
+	for k, v := range req.Header {
+		hfs = append(hfs, &hpack.HeaderField{Name: strings.ToLower(k), Value: v})
+	}
+	return hfs
 }

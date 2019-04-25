@@ -46,7 +46,10 @@ func (c *Conn) serve() {
 	c.tlsConn.Read(prefaceBuffer)
 	fmt.Println(string(prefaceBuffer))
 
-	settingsFrame := frame.ReadFrame(c.tlsConn)
+	settingsFrame, err := frame.ReadFrame(c.tlsConn)
+	if err != nil {
+		// TODO: Handle error
+	}
 	if settingsFrame.Type != frame.SettingsType {
 		// This should not happen but error should be handled
 	}
@@ -81,7 +84,11 @@ func (c *Conn) serve() {
 	// Connection initiated and ready to receive header frames
 	// errors.EnhanceYourCalm
 	for {
-		newFrame := frame.ReadFrame(c.tlsConn)
+		// fmt.Println("Looping serve")
+		newFrame, err := frame.ReadFrame(c.tlsConn)
+		if err != nil {
+			break
+		}
 
 		switch newFrame.Type {
 		case frame.DataType:

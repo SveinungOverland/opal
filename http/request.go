@@ -13,6 +13,9 @@ type Request struct {
 
 	finished   bool   // Bool for deciding if next request can be handled
 	Finish func() // Changes the next-value to true
+
+	// RFC 7540 - Section 8.2 - Server Push
+	OnPush func(req *Request) // A method for describing the action of PushRequests
 }
 
 // ----- PRIVATE METHODS ------

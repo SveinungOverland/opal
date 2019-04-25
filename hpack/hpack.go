@@ -7,72 +7,65 @@ import (
 
 const defaultDynTabSize = 4096
 
+// Context manages both HPACK encoding and decoding. Is basically a wrapper.
 type Context struct {
-	decoder *decoder
-	encoder *encoder
+	Decoder *Decoder
+	Encoder *Encoder
 }
 
 // NewContext creates a new hpack-context. It initializes a new dynamic table with a given
 // max-size.
-func NewContext(dynamicTableMaxSize uint32) *Context {
+func NewContext(encoderDynTabMaxSize uint32, decoderDynTabMaxSize uint32) *Context {
 	
 	// Initialize Decoder
-	dynT := newDynamicTable(dynamicTableMaxSize)
-	decoder := newDecoder(dynT)
+	decoder := NewDecoder(decoderDynTabMaxSize)
 
 	// Initialize Encoder
-	encodeDynt := newDynamicTable(dynamicTableMaxSize)
-	encoder := newEncoder(encodeDynt)
+	encoder := NewEncoder(encoderDynTabMaxSize)
 
 	return &Context{
-		decoder: decoder,
-		encoder: encoder,
+		Decoder: decoder,
+		Encoder: encoder,
 	}
 }
 
 // Decode decodes a sequence of bytes from a header frame.
 // Returns an array of HeaderFields
 func (c *Context) Decode(bytes []byte) ([]*HeaderField, error) {
-	return c.decoder.Decode(bytes)
+	return c.Decoder.Decode(bytes)
 }
 
 // Encode encodes a set of headers
-func (c *Context) Encode(hfs []*HeaderField) ([]byte, error) {
+func (c *Context) Encode(hfs []*HeaderField) ([]byte) {
 	var bytes []byte
 	for _, hf := range hfs {
-		buf, err := c.encoder.EncodeField(hf)
-		if err != nil {
-			return bytes, err
-		}
+		buf := c.Encoder.EncodeField(hf)
 		bytes = append(bytes, buf...)
 	}
-	return bytes, nil
+	return bytes
 }
 
-// EncodeHeaders encodes a set of headers from a map
-func (c *Context) EncodeMap(headers map[string]string) ([]byte, error) {
+// EncodeMap encodes a set of headers from a map
+func (c *Context) EncodeMap(headers map[string]string) ([]byte) {
 	var bytes []byte
 	for k, v := range headers {
-		buf, err := c.encoder.EncodeField(&HeaderField{Name: strings.ToLower(k), Value: v})
-		if err != nil {
-			return bytes, err
-		}
+		buf := c.Encoder.EncodeField(&HeaderField{Name: strings.ToLower(k), Value: v})
 		bytes = append(bytes, buf...)
 	}
-	return bytes, nil
+	return bytes
 }
 
 // DecoderDynamicTable returns a deep copy of the HeaderFields in the decoder's dynamic table
 func (c *Context) DecoderDynamicTable() []*HeaderField {
-	hfs := make([]*HeaderField, len(c.decoder.dynTab.HeaderFields))
-	copy(hfs, c.decoder.dynTab.HeaderFields)
+	hfs := make([]*HeaderField, len(c.Decoder.dynTab.HeaderFields))
+	copy(hfs, c.Decoder.dynTab.HeaderFields)
 	return hfs
 }
 
 // EncoderDynamicTable returns a deep copy of the HeaderFields in the encoder's dynamic table
 func (c *Context) EncoderDynamicTable() []*HeaderField {
-	hfs := make([]*HeaderField, len(c.encoder.dynTab.HeaderFields))
-	copy(hfs, c.encoder.dynTab.HeaderFields)
+	hfs := make([]*HeaderField, len(c.Encoder.dynTab.HeaderFields))
+	copy(hfs, c.Encoder.dynTab.HeaderFields)
 	return hfs
 }
 

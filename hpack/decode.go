@@ -6,7 +6,8 @@ import (
 	huff "opal/hpack/huffman"
 )
 
-type decoder struct {
+// Decoder manages the decoding of headerfields
+type Decoder struct {
 	dynTab *dynamicTable
 
 	buf []byte // The current working buffer
@@ -14,14 +15,16 @@ type decoder struct {
 	onHeaderParsed func(hf *HeaderField) // A function for handling when a headerfield is successfully parsed
 }
 
-func newDecoder(dynT *dynamicTable) *decoder {
-	d := &decoder{
+// NewDecoder creates a new decoder with given table size
+func NewDecoder(dynTabMaxSize uint32) *Decoder {
+	dynT := newDynamicTable(dynTabMaxSize)
+	return &Decoder{
 		dynTab: dynT,
 	}
-	return d
 }
 
-func (d *decoder) Decode(buf []byte) ([]*HeaderField, error) {
+// Decode decodes a byte array of headers
+func (d *Decoder) Decode(buf []byte) ([]*HeaderField, error) {
 	hfields := make([]*HeaderField, 0)
 	d.onHeaderParsed = func(hf *HeaderField) { hfields = append(hfields, hf) }
 	err := d.decodeHeaders(buf)
@@ -31,7 +34,7 @@ func (d *decoder) Decode(buf []byte) ([]*HeaderField, error) {
 	return hfields, nil
 }
 
-func (d *decoder) decodeHeaders(buf []byte) error {
+func (d *Decoder) decodeHeaders(buf []byte) error {
 	d.buf = buf
 
 	var err error
@@ -64,7 +67,7 @@ func (d *decoder) decodeHeaders(buf []byte) error {
 	return err
 }
 
-func (d *decoder) getHeaderFieldRepr() headerFieldRepr {
+func (d *Decoder) getHeaderFieldRepr() headerFieldRepr {
 	b := d.buf[0]
 	switch {
 	// Indexed representation - MSB are set to 1 - Section 6.2.1
@@ -92,7 +95,7 @@ func (d *decoder) getHeaderFieldRepr() headerFieldRepr {
 	return invalidHFRepr
 }
 
-func (d *decoder) getHeaderFieldByIndex(index uint32) (*HeaderField, bool) {
+func (d *Decoder) getHeaderFieldByIndex(index uint32) (*HeaderField, bool) {
 
 	// Indexes starts at 1, not 0. Index can not be longer than the static table
 	if index == 0 {
@@ -120,7 +123,7 @@ func (d *decoder) getHeaderFieldByIndex(index uint32) (*HeaderField, bool) {
 }
 
 // Section 6.1 - http://http2.github.io/http2-spec/compression.html#indexed.header.representation
-func (d *decoder) parseIndexedField() error {
+func (d *Decoder) parseIndexedField() error {
 	idx, buf, err := readLSBValue(7, d.buf) // Gets the 7 LSB - 0xxx xxxx
 	if err != nil {
 		return err
@@ -138,7 +141,7 @@ func (d *decoder) parseIndexedField() error {
 
 // Parses an literal string
 // Section 6.2.1 - http://http2.github.io/http2-spec/compression.html#indexed.header.representation
-func (d *decoder) parseLiteralString(n byte, hfRepr headerFieldRepr) error {
+func (d *Decoder) parseLiteralString(n byte, hfRepr headerFieldRepr) error {
 	buf := d.buf
 	idx, buf, err := readLSBValue(n, buf) // Gets the n LSB - xxnn nnnn
 	if err != nil {
@@ -188,7 +191,7 @@ func (d *decoder) parseLiteralString(n byte, hfRepr headerFieldRepr) error {
 +---+---------------------------+ */
 
 // Sets the max size of the dynamic table
-func (d *decoder) parseDynTabSizeUpdate() error {
+func (d *Decoder) parseDynTabSizeUpdate() error {
 	// Might have to check if allowed to change dynamic table size? RFC7541 - Section 4.2
 
 	// Read new max size

@@ -9,7 +9,7 @@ type PushPromiseFlags struct {
 	Padded     bool
 }
 
-func (p *PushPromiseFlags) ReadFlags(flags byte) {
+func (p PushPromiseFlags) ReadFlags(flags byte) {
 	p.EndHeaders = (flags & 0x4) != 0x0
 	p.Padded = (flags & 0x8) != 0x0
 }
@@ -30,7 +30,7 @@ type PushPromisePayload struct {
 	PadLength byte
 }
 
-func (p *PushPromisePayload) ReadPayload(payload []byte, length uint32, flags IFlags) {
+func (p PushPromisePayload) ReadPayload(payload []byte, length uint32, flags IFlags) {
 	index := 0
 	if flags.(*PushPromiseFlags).Padded {
 		p.PadLength = payload[0]

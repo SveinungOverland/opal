@@ -10,6 +10,8 @@ import (
 	"opal/frame/types"
 )
 
+const initialHeaderTableSize = uint32(4096)
+
 type Conn struct {
 	server        *Server
 	conn          net.Conn
@@ -23,6 +25,7 @@ type Conn struct {
 	outChan       chan *Stream // Channel for sending finished streams
 	outChanFrame  chan *frame.Frame // Channel for sending single Frame's not associated with a stream
 	settings      map[uint16]uint32
+	prevStreamID  uint32 // The previous created stream's identifer.
 }
 
 func (c *Conn) serve() {
@@ -56,8 +59,9 @@ func (c *Conn) serve() {
 	}
 
 
-	//                            Setting 1 is ContextSize
-	c.hpack = hpack.NewContext(c.settings[1])
+	// Creating new HPACK context (with encoder and decoder)
+	// Setting 1 is ContextSize
+	c.hpack = hpack.NewContext(initialHeaderTableSize, c.settings[1])
 
 	// TODO: Change actual settings based on the frame above
 	settingsResponse := &frame.Frame{

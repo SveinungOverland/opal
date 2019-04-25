@@ -4,21 +4,24 @@ import (
 	huff "opal/hpack/huffman"
 )
 
-type encoder struct {
+// Encoder manages the encoding of headerfields
+type Encoder struct {
 	dynTab *dynamicTable
 
 	buf []byte // Current working buffer
 }
 
-func newEncoder(dynT *dynamicTable) *encoder {
-	return &encoder{
+// NewEncoder creates a new encoder with given table size
+func NewEncoder(dynTabMaxSize uint32) *Encoder {
+	dynT := newDynamicTable(dynTabMaxSize)
+	return &Encoder{
 		dynTab: dynT,
 	}
 }
 
-func (e *encoder) EncodeField(hf *HeaderField) ([]byte, error) {
+// EncodeField encodes a given headerfield and returns the sequence of encoded bytes
+func (e *Encoder) EncodeField(hf *HeaderField) ([]byte) {
 	e.buf = make([]byte, 0)
-	var err error
 
 	// Check if header exists in the static or the dynamic table
 	idx, perfectMatch := e.findHFMatch(hf)
@@ -35,21 +38,21 @@ func (e *encoder) EncodeField(hf *HeaderField) ([]byte, error) {
 		}
 
 		if idx != 0 {
-			err = e.encodeFieldIndexed(hf, idx, willIndex)
+			e.encodeFieldIndexed(hf, idx, willIndex)
 		} else {
-			err = e.encodeField(hf, willIndex)
+			e.encodeField(hf, willIndex)
 		}
 	}
-	return e.buf, err
+	return e.buf
 }
 
-func (e *encoder) encodeIndexed(idx uint32) {
+func (e *Encoder) encodeIndexed(idx uint32) {
 	l := len(e.buf)
 	e.buf = applyIndexOrLength(e.buf, 7, idx)
 	e.buf[l] |= 0x80 // Sets first bit to 1 -> 0x80 = 1xxx xxxx
 }
 
-func (e *encoder) encodeFieldIndexed(hf *HeaderField, idx uint32, isIndexed bool) error {
+func (e *Encoder) encodeFieldIndexed(hf *HeaderField, idx uint32, isIndexed bool) {
 	l := len(e.buf)
 	var n byte // Number of bits to shift => xxnn nnnn
 	var mask byte
@@ -63,16 +66,12 @@ func (e *encoder) encodeFieldIndexed(hf *HeaderField, idx uint32, isIndexed bool
 
 	e.buf = applyIndexOrLength(e.buf, n, idx)
 	e.buf[l] |= mask
-	buf, err := encodeLitrString(e.buf, hf.Value)
-	if err != nil {
-		return err
-	}
+	buf := encodeLitrString(e.buf, hf.Value)
 
 	e.buf = buf
-	return nil
 }
 
-func (e *encoder) encodeField(hf *HeaderField, isIndexed bool) error {
+func (e *Encoder) encodeField(hf *HeaderField, isIndexed bool) {
 	var idx byte
 	if isIndexed {
 		idx = 64 // 0100 0000
@@ -81,21 +80,16 @@ func (e *encoder) encodeField(hf *HeaderField, isIndexed bool) error {
 	}
 
 	e.buf = append(e.buf, idx) // appends 0100 0000 or 0000 0000
-	buf, err := encodeLitrString(e.buf, hf.Name)
-	if err != nil {
-		return err
-	}
+	buf := encodeLitrString(e.buf, hf.Name)
+
 	e.buf = buf
-	buf, err = encodeLitrString(e.buf, hf.Value)
-	if err != nil {
-		return err
-	}
+	buf = encodeLitrString(e.buf, hf.Value)
+
 	e.buf = buf
-	return nil
 }
 
 // ----- HELPERS -----
-func encodeLitrString(buf []byte, s string) ([]byte, error) {
+func encodeLitrString(buf []byte, s string) ([]byte) {
 	// Decode string with huffman
 	huffDecoded := huff.Encode([]byte(s))
 
@@ -104,12 +98,12 @@ func encodeLitrString(buf []byte, s string) ([]byte, error) {
 	length := uint32(len(huffDecoded))
 	buf = applyIndexOrLength(buf, 7, length)
 	buf[first] |= 0x80 // Makes sure the H is set to 1 => 0x80 = 1xxxx xxxx
-	/* 	buf = append(buf, length) */
+
 	buf = append(buf, huffDecoded...)
-	return buf, nil
+	return buf
 }
 
-func (e *encoder) findHFMatch(hf *HeaderField) (idx uint32, perfectMatch bool) {
+func (e *Encoder) findHFMatch(hf *HeaderField) (idx uint32, perfectMatch bool) {
 
 	// Search through the static table
 	idx, perfectMatch = findStaticHF(hf)

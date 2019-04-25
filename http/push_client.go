@@ -22,8 +22,9 @@ func (pc *PushClient) Push(path string) {
 	// RFC7540 claims that a ":authority" pseudo-header must be sent where the server is authoriative
 	req.Authority = pc.req.Authority 
 	
-	// Add to push request list
-	pc.res.pushRequests = append(pc.res.pushRequests, req)
+	if (pc.req.OnPush != nil) {
+		pc.req.OnPush(req)
+	}
 }
 
 

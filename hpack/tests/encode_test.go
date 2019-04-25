@@ -34,14 +34,14 @@ func TestEncodeDecodeLongHeaders(t *testing.T) {
 // check if equal
 func encodeDecodeTest(t *testing.T, test hpackTest) {
 	// Create encoder
-	c1 := hpack.NewContext(256)
+	c1 := hpack.NewContext(256, 256)
 	hfs, err := c1.Encode(test.expected)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Create decoder
-	c2 := hpack.NewContext(256)
+	c2 := hpack.NewContext(256, 256)
 	actual, err := c2.Decode(hfs)
 	if err != nil {
 		t.Error(err)

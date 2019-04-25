@@ -35,10 +35,7 @@ func TestEncodeDecodeLongHeaders(t *testing.T) {
 func encodeDecodeTest(t *testing.T, test hpackTest) {
 	// Create encoder
 	c1 := hpack.NewContext(256, 256)
-	hfs, err := c1.Encode(test.expected)
-	if err != nil {
-		t.Error(err)
-	}
+	hfs := c1.Encode(test.expected)
 
 	// Create decoder
 	c2 := hpack.NewContext(256, 256)

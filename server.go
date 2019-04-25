@@ -57,6 +57,10 @@ func (s *Server) Listen(port int16) error {
 	}
 }
 
+func (s *Server) Register(r *router.Router) {
+	s.rootRoute.AppendRouter(r)
+}
+
 func (s *Server) createConn(conn net.Conn) *Conn {
 	c := &Conn{
 		server: s,
@@ -75,7 +79,6 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 			5: 16384, // Max Frame Size
 			//6: no-limit, // Max Header List Size
 		},
-		streams: map[uint32]*Stream{},
 	}
 
 	if s.isTLS {

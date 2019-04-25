@@ -75,6 +75,7 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 			5: 16384, // Max Frame Size
 			//6: no-limit, // Max Header List Size
 		},
+		streams: map[uint32]*Stream{},
 	}
 
 	if s.isTLS {

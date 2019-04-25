@@ -2,7 +2,7 @@ package frame
 
 import (
 	"encoding/binary"
-	"fmt"
+	// "fmt"
 	"io"
 	"opal/frame/types"
 )
@@ -44,12 +44,16 @@ type Frame struct {
 }
 
 // ReadFrame takes a reader and returns a frame with type
-func ReadFrame(r io.Reader) Frame {
+func ReadFrame(r io.Reader) (Frame, error) {
+	// fmt.Println("Reading frame")
 	frame := Frame{}
 
 	lengthBuffer := make([]byte, 3)
-	r.Read(lengthBuffer)
+	if _, err := r.Read(lengthBuffer); err != nil {
+		return frame, err
+	}
 	length := binary.BigEndian.Uint32(append([]byte{0}, lengthBuffer...))
+	// fmt.Println("Read frame length equal to", length)
 	frame.Length = length
 
 	typeFlagBuffer := make([]byte, 2)
@@ -88,7 +92,7 @@ func ReadFrame(r io.Reader) Frame {
 	case SettingsType: // Frame is of type Settings  |  Defines parameters for the connection only
 		settings := types.CreateSettings(typeFlagBuffer[1], payloadBuffer, length)
 		frame.Type = SettingsType
-		fmt.Printf("%+v\n", settings.Flags)
+		// fmt.Printf("%+v\n", settings.Flags)
 		frame.Flags = &settings.Flags
 		frame.Payload = &settings.Payload
 	case PushPromiseType: // Frame is of type PushPromise  |  Signals peer for server push
@@ -118,7 +122,7 @@ func ReadFrame(r io.Reader) Frame {
 		frame.Payload = &continuation.Payload
 	}
 
-	return frame
+	return frame, nil
 }
 
 // ToBytes turnes a frame into sendable bytes

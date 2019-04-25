@@ -26,15 +26,40 @@ func WriteStream(c *Conn) {
 	head := 0
 	frames := make([]*frame.Frame, 50)
 
+
 	// Helper funcs
+	queueHealthCheck := func() {
+		fmt.Println("index:", index, "head:", head, "indexesLeft:", indexesLeft)
+		if index == len(frames) {
+
+			// Index has reached end of frames slice
+			if indexesLeft != 0 {
+				// frames slice has unused indexes
+				index = 0
+			} else {
+				// indexesLeft is 0
+				// frames slice has run out of space, create more
+				// TODO: Release unused space from frames slice, this is a memory leak in the making
+				frames = append(frames, make([]*frame.Frame, 50)...)
+				indexesLeft = 50
+			}
+		}
+		if head == len(frames) {
+			if indexesLeft != 0 {
+				head = 0
+			}
+		}
+	}
+
 	addFrame := func(f *frame.Frame) {
+		queueHealthCheck()
 		frames[index] = f
 		indexesLeft--
 		index++
 	}
 	
 	addStream := func(s *Stream) {
-		fmt.Printf("Adding stream %+v\n", s)
+		// fmt.Printf("Adding stream %+v\n", s)
 		// TODO: Check stream state, to make sure client is waiting to receive frames
 		maxPayloadSize := c.settings[5]
 		// Create Header Frame
@@ -86,9 +111,9 @@ func WriteStream(c *Conn) {
 			addFrame(continuationFrame)
 		}
 		// Create payload frames
-		fmt.Println(s.data)
+		// fmt.Println(s.data)
 		dataLength := uint32(len(s.data))
-		fmt.Println("DATALENGTH:::", dataLength)
+		// fmt.Println("DATALENGTH:::", dataLength)
 		dataFramesNeeded := (dataLength + maxPayloadSize - 1) / maxPayloadSize // Ceil of int division
 		for i := uint32(0); i < dataFramesNeeded; i++ {
 			dataFlags := &types.DataFlags{}
@@ -111,24 +136,8 @@ func WriteStream(c *Conn) {
 
 	// Listen for new writable streams or frame
 	for {
-		if index == len(frames) {
-			// Index has reached end of frames slice
-			if indexesLeft != 0 {
-				// frames slice has unused indexes
-				index = 0
-			} else {
-				// indexesLeft is 0
-				// frames slice has run out of space, create more
-				// TODO: Release unused space from frames slice, this is a memory leak in the making
-				frames = append(frames, make([]*frame.Frame, 50)...)
-				indexesLeft = 50
-			}
-		}
-		if head == len(frames) {
-			if indexesLeft != 0 {
-				head = 0
-			}
-		}
+		// fmt.Println("StreamWriter is looping")
+		queueHealthCheck()
 		select {
 		// This select block is not blocking to make sure the function keeps
 		// doing work if it exists
@@ -150,7 +159,7 @@ func WriteStream(c *Conn) {
 				}
 			}
 			// Write next frame
-			fmt.Printf("Writing frame %+v\n with flags %+v\n and payload: %+v\n", frames[head], frames[head].Flags, frames[head].Payload)
+			// fmt.Printf("Writing frame %+v\n with flags %+v\n and payload: %+v\n", frames[head], frames[head].Flags, frames[head].Payload)
 			c.tlsConn.Write(frames[head].ToBytes())
 			head++
 			indexesLeft++

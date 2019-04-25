@@ -62,6 +62,7 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 		server: s,
 		conn:   conn,
 		isTLS:  false,
+		streams: make(map[uint32]*Stream),
 		inChan: make(chan *Stream, 10),
 		outChan: make(chan *Stream, 10),
 		outChanFrame: make(chan *frame.Frame, 5),

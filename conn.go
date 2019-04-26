@@ -55,6 +55,7 @@ func (c *Conn) serve() {
 		panic("Settings frame from handshake is of wrong type!")
 	}
 
+	fmt.Printf("HANDSHAKE FRAME: %+v\n", settingsFrame)
 	if settingsFrame.Length > 0 {
 		for key, value := range settingsFrame.Payload.(*types.SettingsPayload).IDValuePair {
 			if key >= 0x1 && key <= 0x6 {

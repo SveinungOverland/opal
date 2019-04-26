@@ -1,9 +1,10 @@
 package opal
 
 import (
-	"fmt"
+	// "fmt"
 	"opal/frame"
 	"opal/frame/types"
+	"container/list"
 )
 
 /*
@@ -15,41 +16,11 @@ import (
 
 func WriteStream(c *Conn) {
 	// Init variables needed for function
-	indexesLeft := 50
-	index := 0
-	head := 0
-	frames := make([]*frame.Frame, 50)
-
+	frames := list.New() // Queue for frames
 
 	// Helper funcs
-	queueHealthCheck := func() {
-		fmt.Println("index:", index, "head:", head, "indexesLeft:", indexesLeft)
-		if index == len(frames) {
-
-			// Index has reached end of frames slice
-			if indexesLeft != 0 {
-				// frames slice has unused indexes
-				index = 0
-			} else {
-				// indexesLeft is 0
-				// frames slice has run out of space, create more
-				// TODO: Release unused space from frames slice, this is a memory leak in the making
-				frames = append(frames, make([]*frame.Frame, 50)...)
-				indexesLeft = 50
-			}
-		}
-		if head == len(frames) {
-			if indexesLeft != 0 {
-				head = 0
-			}
-		}
-	}
-
 	addFrame := func(f *frame.Frame) {
-		queueHealthCheck()
-		frames[index] = f
-		indexesLeft--
-		index++
+		frames.PushBack(f)
 	}
 	
 	addStream := func(s *Stream) {
@@ -144,7 +115,6 @@ func WriteStream(c *Conn) {
 	// Listen for new writable streams or frame
 	for {
 		// fmt.Println("StreamWriter is looping")
-		queueHealthCheck()
 		select {
 		// This select block is not blocking to make sure the function keeps
 		// doing work if it exists
@@ -153,9 +123,8 @@ func WriteStream(c *Conn) {
 		case frame := <- c.outChanFrame:
 			addFrame(frame)
 		default:
-			if indexesLeft == len(frames) {
+			if frames.Len() == 0 {
 				// If frame slice is empty reset the size to avoid memory leak
-				frames = make([]*frame.Frame, 50)
 				select {
 				// This select block is blocking, so this function doesn't use up 
 				// resources endlessly looping
@@ -167,10 +136,9 @@ func WriteStream(c *Conn) {
 			}
 			// Write next frame
 			// fmt.Printf("Writing frame %+v\n with flags %+v\n and payload: %+v\n", frames[head], frames[head].Flags, frames[head].Payload)
-			c.tlsConn.Write(frames[head].ToBytes())
-			head++
-			indexesLeft++
-
+			frameToWrite := frames.Front()
+			c.tlsConn.Write(frameToWrite.Value.(*frame.Frame).ToBytes())
+			frames.Remove(frameToWrite)
 		}
 	}
 }

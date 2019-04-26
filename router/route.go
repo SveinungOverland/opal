@@ -74,6 +74,7 @@ func (r *Route) GetHandlers(method string) []HandleFunc {
 func (r *Route) merge(route *Route) {
 	// Overwrite config
 	r.static = route.static
+	r.staticPath = route.staticPath
 	r.Get = route.Get
 	r.Post = route.Post
 	r.Put = route.Put
@@ -115,7 +116,7 @@ func (r *Route) string(depth int) string {
 	}
 	s += fmt.Sprintf("%s  %v", r.value, methods)
 	if r.static {
-		s += "    STATIC"
+		s += "    STATIC  -  " + r.staticPath
 	}
 	s += "\n"
 

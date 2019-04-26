@@ -4,7 +4,7 @@ import (
 	"log"
 	"opal"
 	"opal/router"
-	opalHttp "opal/http"
+	
 	_ "net/http/pprof"
 	"net/http"
 	"fmt"
@@ -21,8 +21,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r := router.NewRouter("/test")
-	r.Get("/", func(req *opalHttp.Request, res *opalHttp.Response) {
+	r := router.NewRouter("/")
+	/* r.Get("/", func(req *opalHttp.Request, res *opalHttp.Response) {
 		res.Body = []byte("Hello World")
 	})
 
@@ -30,11 +30,14 @@ func main() {
 		res.Body = []byte("<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"css\\theme.css\"></head><body><h4>Hello World! :D</h4><a href=\"\\\">Click here</a></body></html>")	
 		res.Header["content-type"] = "text/html; charset=utf-8"
 
-		/* pushClient := opalHttp.NewPusher(req, res)
-		pushClient.Push("/css/theme.css") */
-	})
+		pushClient := opalHttp.NewPusher(req, res)
+		pushClient.Push("/css/theme.css")
+	}) */
+	r.Static("/", "./build")
 
-	r.Static("/css", "./css")
+	fmt.Println(r.Root())
+
+	//r.Static("/css", "./css")
 
 	srv.Register(r)
 

@@ -33,7 +33,7 @@ func newFileHandler(relativePath string, filePath string) *FileHandler {
 
 // FullPath returns the full path of the file.
 func (fh *FileHandler) FullPath() string {
-	return strings.TrimRight(fh.relativePath, "/") + "/" + fh.filePath
+	return strings.TrimRight(fh.relativePath, "/") + fh.filePath
 }
 
 // ReadFile reads the file of the provided path. Returns an error if it does not exist.

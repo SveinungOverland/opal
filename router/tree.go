@@ -70,6 +70,10 @@ func search(root *Route, path string) (match bool, r *Route, params map[string]s
 		return false, nil, nil, nil
 	}
 
+	if root.static {
+		return false, root, nil, newFileHandler(root.staticPath, path)
+	}
+
 	// Check if provided path is referencing the root
 	if subPaths[0] == "/" {
 		return true, root, nil, nil

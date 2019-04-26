@@ -52,15 +52,17 @@ func (c *Conn) serve() {
 	}
 	if settingsFrame.Type != frame.SettingsType {
 		// This should not happen but error should be handled
+		panic("Settings frame from handshake is of wrong type!")
 	}
 
-	for key, value := range settingsFrame.Payload.(*types.SettingsPayload).IDValuePair {
-		if key >= 0x1 && key <= 0x6 {
-			// Any other key is out of range and is ignored
-			c.settings[key] = value
+	if settingsFrame.Length > 0 {
+		for key, value := range settingsFrame.Payload.(*types.SettingsPayload).IDValuePair {
+			if key >= 0x1 && key <= 0x6 {
+				// Any other key is out of range and is ignored
+				c.settings[key] = value
+			}
 		}
 	}
-
 
 	// Creating new HPACK context (with encoder and decoder)
 	// Setting 1 is ContextSize

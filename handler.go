@@ -2,6 +2,7 @@ package opal
 
 import (
 	"fmt"
+	"opal/errors"
 	"opal/http"
 	"opal/router"
 	"opal/frame"
@@ -9,6 +10,9 @@ import (
 	"opal/hpack"
 	"strconv"
 	"strings"
+	"sync"
+
+	"github.com/fatih/color"
 )
 
 
@@ -18,21 +22,16 @@ import (
 // This file will also do all the header compression and decompression
 
 type responseWrapper struct {
+	req		*http.Request
 	res 	 *http.Response
 	streamID uint32
-}
-
-type pushReqWrapper struct {
-	streamID uint32
-	req		*http.Request
-	res 	*http.Response
 }
 
 // ServeStreamHandler handles incoming streams, build and sends responses, and handles push reqests
 func serveStreamHandler(conn *Conn) {
 	// A channel to handle finished requests (responses)
 	reqDoneChan := make(chan responseWrapper, 10)
-	pushReqChan := make(chan pushReqWrapper, 10) // Handels server push requests
+	pushReqChan := make(chan responseWrapper, 10) // Handels server push requests
 	defer close(reqDoneChan)
 	defer close(pushReqChan)
 
@@ -46,9 +45,9 @@ func serveStreamHandler(conn *Conn) {
 			req, err := createRequest(conn, s) // Header decompression, creating request
 			if err != nil {
 				fmt.Println(err)
+				conn.outChanFrame <- frame.NewErrorFrame(s.id, errors.CompressionError)
 				continue
 			}
-			fmt.Printf("Recieved Request: %s - %s\n", req.URI, req.Method)
 			
 			// Handle server push
 			if (serverPushEnabled) {
@@ -95,7 +94,8 @@ func createRequest(conn *Conn, s *Stream) (*http.Request, error) {
 // HandleRequest builds a response based on given request and sends it to provided out-channel
 func handleRequest(conn *Conn, reqDoneChan chan responseWrapper, req *http.Request, streamID uint32) {
 	res := serveRequest(conn, req)
-	reqDoneChan <- responseWrapper{res, streamID}
+	reqDoneChan <- responseWrapper{req, res, streamID}
+	go printResponse(req, res)
 }
 
 // ServeRequest handles an incoming request. Runs all endpoint-methods 
@@ -132,8 +132,6 @@ func serveRequest(conn *Conn, req *http.Request) *http.Response{
 
 // SendResponse encodes a response and sends it to a connection's out-channel
 func sendResponse(conn *Conn, s *Stream, res *http.Response) {
-	fmt.Printf("Sending response: %d\n", res.Status)
-
 	// Initialize headers to send
 	hfs := make([]*hpack.HeaderField, 0)
 	hfs = append(hfs, &hpack.HeaderField{Name: ":status", Value: strconv.Itoa(int(res.Status))})
@@ -180,10 +178,10 @@ func handleFile(res *http.Response, fh *router.FileHandler) {
 }
 
 // PushReqHandler creates a new function handler for handling new server push requests
-func pushReqHandler(conn *Conn, pushReqChan chan pushReqWrapper, streamID uint32) func(req *http.Request) {
+func pushReqHandler(conn *Conn, pushReqChan chan responseWrapper, streamID uint32) func(req *http.Request) {
 	return func(r *http.Request) {
 		res := serveRequest(conn, r)
-		pushReqChan <- pushReqWrapper{streamID, r, res}
+		pushReqChan <- responseWrapper{r, res, streamID, }
 	}
 }
 
@@ -236,4 +234,21 @@ func initReqHFs(req *http.Request) []*hpack.HeaderField {
 		hfs = append(hfs, &hpack.HeaderField{Name: strings.ToLower(k), Value: v})
 	}
 	return hfs
+}
+
+// PrintResponse prints the request and response status code
+var mutex = &sync.Mutex{}
+
+func printResponse(req *http.Request, res *http.Response) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	var statusColor func(a ...interface{}) string
+	if res.Status < 300 {
+		statusColor = color.New(color.FgGreen).SprintFunc()
+	} else if res.Status < 400 {
+		statusColor = color.New(color.FgYellow).SprintFunc()
+	} else {
+		statusColor = color.New(color.FgRed).SprintFunc()
+	}
+	fmt.Fprintf(color.Output, "HTTP/2 %s %s %s\n", req.Method, req.URI, statusColor(strconv.Itoa(int(res.Status))))
 }

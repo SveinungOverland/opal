@@ -23,6 +23,7 @@ type responseWrapper struct {
 }
 
 type pushReqWrapper struct {
+	streamID uint32
 	req		*http.Request
 	res 	*http.Response
 }
@@ -51,18 +52,18 @@ func serveStreamHandler(conn *Conn) {
 			
 			// Handle server push
 			if (serverPushEnabled) {
-				req.OnPush = pushReqHandler(conn, pushReqChan)
+				req.OnPush = pushReqHandler(conn, pushReqChan, s.id)
 			}
 			
 			go handleRequest(conn, reqDoneChan, req, s.id) // Serve and build response
 
 		// Check for and handle incoming server push requests
 		case pushReqWrp := <- pushReqChan:
-			pushPromise := newPushPromise(conn, pushReqWrp.req) // Create Push Request
+			pushPromise := newPushPromise(conn, pushReqWrp.req, pushReqWrp.streamID) // Create Push Request
 			conn.outChanFrame <- pushPromise // Send Push Request
 			stream := &Stream{
-				id: pushPromise.ID,
-				state: Idle,
+				id: pushReqWrp.streamID,
+				state: ReservedLocal,
 			}
 			sendResponse(conn, stream, pushReqWrp.res) // Send Push Response
 
@@ -179,15 +180,15 @@ func handleFile(res *http.Response, fh *router.FileHandler) {
 }
 
 // PushReqHandler creates a new function handler for handling new server push requests
-func pushReqHandler(conn *Conn, pushReqChan chan pushReqWrapper) func(req *http.Request) {
+func pushReqHandler(conn *Conn, pushReqChan chan pushReqWrapper, streamID uint32) func(req *http.Request) {
 	return func(r *http.Request) {
 		res := serveRequest(conn, r)
-		pushReqChan <- pushReqWrapper{r, res}
+		pushReqChan <- pushReqWrapper{streamID, r, res}
 	}
 }
 
 // NewPushPromise creates a new PushPromiseFrame based on a given request
-func newPushPromise(conn *Conn, req *http.Request) *frame.Frame {
+func newPushPromise(conn *Conn, req *http.Request, streamID uint32) *frame.Frame {
 
 	// Initialize request headers
 	hfs := initReqHFs(req)
@@ -200,16 +201,20 @@ func newPushPromise(conn *Conn, req *http.Request) *frame.Frame {
 	// RFC7540 - Section 5.1.1 states that new stream ids from the server must be even
 	conn.prevStreamID = conn.prevStreamID + 2 // prevStreamID starts at zero, so it is always even
 
-	// Decide frame flags
-	flags := byte(0x0&64) // END_HEADERS is set. Headers should not be greater than 2^24 bytes anyway
-
-	pushPromise := types.CreatePushPromise(flags, encodedHeaders, payloadLength)
+	//pushPromise := types.CreatePushPromise(flags, encodedHeaders, payloadLength)
 
 	pushFrame := &frame.Frame {
-		ID: conn.prevStreamID,
+		ID: streamID,
 		Type: frame.PushPromiseType,
-		Flags: pushPromise.Flags,
-		Payload: pushPromise.Payload,
+		Flags: types.PushPromiseFlags {
+			EndHeaders: true,
+			Padded: false,
+		},
+		Payload: types.PushPromisePayload {
+			StreamID: conn.prevStreamID,
+			Fragment: encodedHeaders,
+			PadLength: 0,
+		},
 		Length: payloadLength,
 	}
 

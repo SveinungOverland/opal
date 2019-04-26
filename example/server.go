@@ -4,7 +4,7 @@ import (
 	"log"
 	"opal"
 	"opal/router"
-	
+	/* opalHttp "opal/http" */
 	_ "net/http/pprof"
 	"net/http"
 	"fmt"
@@ -37,8 +37,8 @@ func main() {
 
 	fmt.Println(r.Root())
 
-	//r.Static("/css", "./css")
-
+	/* r.Static("/css", "./css")
+ */
 	srv.Register(r)
 
 

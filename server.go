@@ -53,6 +53,7 @@ func (s *Server) Listen(port int16) error {
 		}
 
 		c := s.createConn(conn)
+		fmt.Printf("New connection established: %s", conn.RemoteAddr().String())
 		go c.serve()
 	}
 }

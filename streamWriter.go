@@ -98,7 +98,7 @@ func WriteStream(c *Conn) {
 				flags.EndHeaders = true
 				headerFragment = s.headers[i*maxPayloadSize-offset:]
 			} else {
-				headerFragment = s.headers[i*maxPayloadSize-offset:][:i*maxPayloadSize]
+				headerFragment = s.headers[i*maxPayloadSize-offset:][:maxPayloadSize]
 			}
 			continuationFrame := &frame.Frame{
 				ID: s.id,
@@ -125,7 +125,7 @@ func WriteStream(c *Conn) {
 				dataFlags.EndStream = true
 				data = s.data[i*maxPayloadSize:]
 			} else {
-				data = s.data[i*maxPayloadSize:][:maxPayloadSize*i]
+				data = s.data[i*maxPayloadSize:][:maxPayloadSize]
 			}
 
 			dataFrame := &frame.Frame{

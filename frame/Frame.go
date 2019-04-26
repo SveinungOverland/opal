@@ -143,3 +143,16 @@ func (f *Frame) ToBytes() []byte {
 	}
 	return frameHeader
 }
+
+// NewErrorFrame is a helper function for easily creating RstStream frames that occour on various errors
+func NewErrorFrame(streamID, errorCode uint32) *Frame {
+	return &Frame{
+		ID: streamID,
+		Type: RstStreamType,
+		Flags: &types.RstStreamFlags{},
+		Payload: &types.RstStreamPayload{
+			ErrorCode: errorCode,
+		},
+		Length: 4,
+	}
+}

@@ -13,12 +13,6 @@ import (
 */
 
 
-type OutChanWrapper struct {
-	stream *Stream
-	frame *frame.Frame
-}
-
-
 func WriteStream(c *Conn) {
 	// Init variables needed for function
 	indexesLeft := 50
@@ -65,25 +59,29 @@ func WriteStream(c *Conn) {
 		// Create Header Frame
 		headerLength := uint32(len(s.headers))
 		headerFlags := &types.HeadersFlags{}
+		headersPayload := &types.HeadersPayload{}
+
+		offset := uint32(0) // offset is used to add space for streamdependency and priorityweight
 		if s.streamDependency != 0 {
 			headerFlags.Priority = true
-			headerLength += 5
-		}
-		headerFramesNeeded := (headerLength + maxPayloadSize - 1) / maxPayloadSize // Ceil of int division
-		if headerFramesNeeded == 1 {
-			headerFlags.EndHeaders = true
-		}
-		if len(s.data) == 0 {
-			headerFlags.EndStream = true
-		}
-		offset := uint32(0)
-		headersPayload := &types.HeadersPayload{}
-		if headerFlags.Priority {
 			offset = 5 // For the 5 bytes streamdependency and priorityweight uses
 			headersPayload.StreamDependency = s.streamDependency
 			headersPayload.PriorityWeight = s.priorityWeight
-		}									// TODO: Fix this
-		headersPayload.Fragment = s.headers //[:maxPayloadSize-offset] // Subtracting length in case priority flag is set 
+		}
+
+		headerFramesNeeded := ((headerLength + offset) + maxPayloadSize - 1) / maxPayloadSize // Ceil of int division
+		
+		if headerFramesNeeded == 1 {
+			headerFlags.EndHeaders = true
+			headersPayload.Fragment = s.headers
+		} else {
+			headersPayload.Fragment = s.headers[:maxPayloadSize-offset] // Subtracting offset in case priority flag is set 
+		}
+
+		if len(s.data) == 0 {
+			headerFlags.EndStream = true
+		}
+
 		headerFrame := &frame.Frame{
 			ID: s.id,
 			Type: frame.HeadersType,
@@ -94,10 +92,13 @@ func WriteStream(c *Conn) {
 		addFrame(headerFrame)
 		for i := uint32(1); i < headerFramesNeeded; i++ {
 			// Create Continuation frames for the remaining header bytes
-			headerFragment := s.headers[i*maxPayloadSize-offset:][:i*maxPayloadSize]
+			var headerFragment []byte
 			flags := &types.ContinuationFlags{}
 			if i == headerFramesNeeded-1 {
 				flags.EndHeaders = true
+				headerFragment = s.headers[i*maxPayloadSize-offset:]
+			} else {
+				headerFragment = s.headers[i*maxPayloadSize-offset:][:i*maxPayloadSize]
 			}
 			continuationFrame := &frame.Frame{
 				ID: s.id,
@@ -116,11 +117,17 @@ func WriteStream(c *Conn) {
 		// fmt.Println("DATALENGTH:::", dataLength)
 		dataFramesNeeded := (dataLength + maxPayloadSize - 1) / maxPayloadSize // Ceil of int division
 		for i := uint32(0); i < dataFramesNeeded; i++ {
+
+			var data []byte
 			dataFlags := &types.DataFlags{}
+
 			if i == dataFramesNeeded-1 {
 				dataFlags.EndStream = true
+				data = s.data[i*maxPayloadSize:]
+			} else {
+				data = s.data[i*maxPayloadSize:][:maxPayloadSize*i]
 			}
-			data := s.data[i*maxPayloadSize:] // [:maxPayloadSize*i]
+
 			dataFrame := &frame.Frame{
 				ID: s.id,
 				Type: frame.DataType,

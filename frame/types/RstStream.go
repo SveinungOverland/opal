@@ -13,7 +13,7 @@ func (r RstStreamFlags) Byte() (flags byte) {
 }
 
 type RstStreamPayload struct {
-	ErrorCode uint32 // Should this be uint or int, rfc doc doens't specify uint...
+	ErrorCode uint32
 }
 
 func (rst *RstStreamPayload) ReadPayload(payload []byte, length uint32, flags IFlags) {

@@ -10,10 +10,14 @@ import (
 	"opal/frame/types"
 
 	"context"
+	"sync"
+	"strings"
 )
 
 const initialHeaderTableSize = uint32(4096)
+var streamMapMutex = sync.Mutex{}
 
+// Conn represents a HTTP-connection
 type Conn struct {
 	ctx           context.Context
 	cancel        context.CancelFunc
@@ -30,6 +34,21 @@ type Conn struct {
 	outChanFrame  chan *frame.Frame // Channel for sending single Frame's not associated with a stream
 	settings      map[uint16]uint32
 	prevStreamID  uint32 // The previous created stream's identifer.
+}
+
+// SetStream sets the stream
+func (c *Conn) SetStream(s *Stream) {
+	streamMapMutex.Lock()
+	defer streamMapMutex.Unlock()
+	c.streams[s.id] = s
+}
+
+// GetStream gets a stream
+func (c *Conn) GetStream(id uint32) (*Stream, bool) {
+	streamMapMutex.Lock()
+	defer streamMapMutex.Unlock()
+	s, ok := c.streams[id]
+	return s, ok
 }
 
 func (c *Conn) serve() {
@@ -52,13 +71,16 @@ func (c *Conn) serve() {
 
 	prefaceBuffer := make([]byte, 24)
 	c.tlsConn.Read(prefaceBuffer)
-	fmt.Println(string(prefaceBuffer))
+	// TODO: Check prefaceBuffer ^^
+	if !strings.HasPrefix(string(prefaceBuffer), "PRI") {
+		fmt.Println("Invalid HTTP/2 preface-buffer: " + string(prefaceBuffer))
+	}
 
 	settingsFrame, err := frame.ReadFrame(c.tlsConn)
 	if err != nil {
 		// TODO: Handle error
 	}
-	fmt.Printf("HANDSHAKE FRAME: %+v\n", settingsFrame)
+	
 	if settingsFrame.Type != frame.SettingsType {
 		// This should not happen but error should be handled
 		panic("Settings frame from handshake is of wrong type!")
@@ -95,7 +117,6 @@ func (c *Conn) serve() {
 	// Connection initiated and ready to receive header frames
 	// errors.EnhanceYourCalm
 	for {
-		// fmt.Println("Looping serve")
 		newFrame, err := frame.ReadFrame(c.tlsConn)
 		if err != nil {
 			break
@@ -104,7 +125,7 @@ func (c *Conn) serve() {
 		switch newFrame.Type {
 		case frame.DataType:
 			// Data should always be associated with a stream
-			stream, ok := c.streams[newFrame.ID]
+			stream, ok := c.GetStream(newFrame.ID)
 			if !ok {
 				// Error, data frame is not associated with a stream
 				continue
@@ -139,12 +160,12 @@ func (c *Conn) serve() {
 				streamDependency: newFrame.Payload.(*types.HeadersPayload).StreamDependency,
 				priorityWeight:   newFrame.Payload.(*types.HeadersPayload).PriorityWeight,
 			}
-			c.streams[newFrame.ID] = newStream
+			c.SetStream(newStream)
 			if newStream.state == HalfClosedRemote {
 				c.inChan <- newStream
 			}
 		case frame.PriorityType:
-			stream, ok := c.streams[newFrame.ID]
+			stream, ok := c.GetStream(newFrame.ID)
 			if newFrame.ID == 0 {	
 				// Error, a priority frame should be .... with a stream
 			}
@@ -154,13 +175,12 @@ func (c *Conn) serve() {
 					state: Idle,
 					lastFrame: &newFrame,
 					headers: make([]byte, 0),
-				}
-				c.streams[newFrame.ID] = stream
+				}				
 			}
 			stream.priorityWeight = newFrame.Payload.(*types.PriorityPayload).PriorityWeight
 			stream.streamDependency = newFrame.Payload.(*types.PriorityPayload).StreamDependency
 		case frame.RstStreamType:
-			stream, ok := c.streams[newFrame.ID]
+			stream, ok := c.GetStream(newFrame.ID)
 			if !ok {
 				// Error
 			}
@@ -194,7 +214,7 @@ func (c *Conn) serve() {
 			}
 		case frame.ContinuationType:
 			// Append headerfragment
-			stream, ok := c.streams[newFrame.ID]
+			stream, ok := c.GetStream(newFrame.ID)
 			if !ok || newFrame.ID == 0 {
 				// Error continuation should always only follow a header
 			}
@@ -205,25 +225,4 @@ func (c *Conn) serve() {
 		}
 
 	}
-
-	// windowUpdateFrame := frame.ReadFrame(c.tlsConn)
-	// fmt.Printf("Window update frame %+v\n", windowUpdateFrame)
-	// fmt.Printf("Window update payload %+v\n", windowUpdateFrame.Payload.(*types.WindowUpdatePayload))
-
-	// headersFrame := frame.ReadFrame(c.tlsConn)
-	// fmt.Printf("Headers frame %+v\n", headersFrame.Flags.(*types.HeadersFlags))
-
-	// s := &Stream{
-	// 	id:      headersFrame.ID,
-	// 	headers: make([]*types.HeadersPayload, 0),
-	// }
-	// s.headers = append(s.headers, headersFrame.Payload.(*types.HeadersPayload))
-
-	// req, err := s.Build(c.hpack)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Printf("%+v\n", req)
-
-	// fmt.Println(c.hpack.Decode((headersFrame.Payload.(*types.HeadersPayload).Fragment)))
 }

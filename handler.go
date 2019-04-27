@@ -23,17 +23,15 @@ import (
 
 type responseWrapper struct {
 	req		*http.Request
-	res 	 *http.Response
-	streamID uint32
+	res 	*http.Response
+	s 		*Stream
 }
 
 // ServeStreamHandler handles incoming streams, build and sends responses, and handles push reqests
 func serveStreamHandler(conn *Conn) {
 	// A channel to handle finished requests (responses)
 	reqDoneChan := make(chan responseWrapper, 10)
-	pushReqChan := make(chan responseWrapper, 10) // Handels server push requests
 	defer close(reqDoneChan)
-	defer close(pushReqChan)
 
 	// Check if server push is enabled
 	serverPushEnabled := conn.settings[2] != 0
@@ -42,11 +40,13 @@ func serveStreamHandler(conn *Conn) {
 		select {
 		// Check if connection is done, if so, return
 		case <- conn.ctx.Done():
-			fmt.Println("Closing C");
 			return
 
 		// Check for and handle incoming stream
 		case s := <- conn.inChan:
+			if s == nil {
+				return
+			}
 			req, err := createRequest(conn, s) // Header decompression, creating request
 			if err != nil {
 				fmt.Println(err)
@@ -54,31 +54,28 @@ func serveStreamHandler(conn *Conn) {
 				continue
 			}
 			
-			// Handle server push
-			if (serverPushEnabled) {
-				req.OnPush = pushReqHandler(conn, pushReqChan, s.id)
-			}
-			
-			go handleRequest(conn, reqDoneChan, req, s.id) // Serve and build response
+			go handleRequest(conn, reqDoneChan, req, s) // Serve and build response
 
-		// Check for and handle incoming server push requests
-		case pushReqWrp := <- pushReqChan:
-			pushPromise := newPushPromise(conn, pushReqWrp.req, pushReqWrp.streamID) // Create Push Request
-			conn.outChanFrame <- pushPromise // Send Push Request
-			stream := &Stream{
-				id: pushReqWrp.streamID,
-				state: ReservedLocal,
-			}
-			sendResponse(conn, stream, pushReqWrp.res) // Send Push Response
 
 		// Check for and handle incoming responses
 		case resWrp := <- reqDoneChan:
-			stream, found := conn.streams[resWrp.streamID]
-			if !found {
-				fmt.Printf("Stream %d is no longer available in stream-map. Throwing away response.\n", resWrp.streamID)
-				continue
+			// Initialize server push requests
+			pushRequests := resWrp.res.PushRequests()
+			var pushResponses []*responseWrapper
+			if serverPushEnabled {
+				pushResponses = sendPushRequest(conn, pushRequests, resWrp.s)
 			}
-			sendResponse(conn, stream, resWrp.res)
+			
+
+			// Send original response
+			sendResponse(conn, resWrp.s, resWrp.res)
+
+			// Send push responses
+			if serverPushEnabled {
+				for _, pshResWrp := range pushResponses {
+					sendResponse(conn, pshResWrp.s, pshResWrp.res)
+				}
+			}
 		}
 	}
 }
@@ -97,16 +94,16 @@ func createRequest(conn *Conn, s *Stream) (*http.Request, error) {
 }
 
 // HandleRequest builds a response based on given request and sends it to provided out-channel
-func handleRequest(conn *Conn, reqDoneChan chan responseWrapper, req *http.Request, streamID uint32) {
+func handleRequest(conn *Conn, reqDoneChan chan responseWrapper, req *http.Request, s *Stream) {
 	res := serveRequest(conn, req)
-	reqDoneChan <- responseWrapper{req, res, streamID}
+	reqDoneChan <- responseWrapper{req, res, s}
 	go printResponse(req, res)
 }
 
 // ServeRequest handles an incoming request. Runs all endpoint-methods 
 func serveRequest(conn *Conn, req *http.Request) *http.Response{
 	// Build response
-	res := http.NewResponse()
+	res := http.NewResponse(req)
 
 	// Find route and build response
 	match, route, params, fh := conn.server.rootRoute.Search(req.URI)
@@ -148,12 +145,45 @@ func sendResponse(conn *Conn, s *Stream, res *http.Response) {
 
 	// Encode headers
 	encodedHeaders := conn.hpack.Encode(hfs) // Header compression
-	
+
 	s.headers = encodedHeaders
 	s.data = res.Body
 
 	// Send stream to outChannel
 	conn.outChan <- s
+}
+
+// ------------ PUSH RESPONSE FUNCTIONS -------------
+
+// SendPushRequest serves a list of requests, builds corresponding responses, and sends new push_promise frames.
+// Returns an array containing the responses and created streams.
+func sendPushRequest(conn *Conn, reqs []*http.Request, s *Stream) ([]*responseWrapper) {
+
+	pushResponses := make([]*responseWrapper, 0)
+
+	// For all push requests
+	for _, pshReq := range reqs {
+		// Serve request
+		res := serveRequest(conn, pshReq)
+
+		// Build PUSH_PROMISE frame
+		pushPromiseFrame := newPushPromise(conn, pshReq, s)
+		
+		// Send PUSH_PROMISE frame
+		conn.outChanFrame <- pushPromiseFrame
+
+		// Create new stream for request
+		stream := &Stream{
+			id: pushPromiseFrame.Payload.(types.PushPromisePayload).StreamID,
+			state: ReservedLocal,
+		}
+		conn.SetStream(stream) // Register stream at conn
+
+		// Append stream and response
+		pushResponses = append(pushResponses, &responseWrapper{nil, res, stream})
+	}
+
+	return pushResponses
 }
 
 // ---- HELPERS -----
@@ -184,22 +214,18 @@ func handleFile(res *http.Response, fh *router.FileHandler) {
 }
 
 // PushReqHandler creates a new function handler for handling new server push requests
-func pushReqHandler(conn *Conn, pushReqChan chan responseWrapper, streamID uint32) func(req *http.Request) {
+func pushReqHandler(conn *Conn, pushReqChan chan responseWrapper, s *Stream) func(req *http.Request) {
 	return func(r *http.Request) {
 		res := serveRequest(conn, r)
-		pushReqChan <- responseWrapper{r, res, streamID, }
+		pushReqChan <- responseWrapper{r, res, s}
 	}
 }
 
 // NewPushPromise creates a new PushPromiseFrame based on a given request
-func newPushPromise(conn *Conn, req *http.Request, streamID uint32) *frame.Frame {
+func newPushPromise(conn *Conn, req *http.Request, s *Stream) *frame.Frame {
 
 	// Initialize request headers
 	hfs := initReqHFs(req)
-
-	for _, hf := range hfs {
-		fmt.Printf("%s - %s\n", hf.Name, hf.Value)
-	}
 
 	// Encode headers
 	encodedHeaders := conn.hpack.Encode(hfs) // Header compression
@@ -208,11 +234,9 @@ func newPushPromise(conn *Conn, req *http.Request, streamID uint32) *frame.Frame
 	// Choose next stream identifier
 	// RFC7540 - Section 5.1.1 states that new stream ids from the server must be even
 	conn.prevStreamID = conn.prevStreamID + 2 // prevStreamID starts at zero, so it is always even
-	fmt.Printf("New stream id: %d\n", conn.prevStreamID)
-	//pushPromise := types.CreatePushPromise(flags, encodedHeaders, payloadLength)
 
 	pushFrame := &frame.Frame {
-		ID: streamID,
+		ID: s.id,
 		Type: frame.PushPromiseType,
 		Flags: types.PushPromiseFlags {
 			EndHeaders: true,
@@ -233,9 +257,9 @@ func newPushPromise(conn *Conn, req *http.Request, streamID uint32) *frame.Frame
 func initReqHFs(req *http.Request) []*hpack.HeaderField {
 	hfs := make([]*hpack.HeaderField, 0)
 	hfs = append(hfs, &hpack.HeaderField{Name: ":method", Value: req.Method})
-	hfs = append(hfs, &hpack.HeaderField{Name: ":authority", Value: req.Authority})
 	hfs = append(hfs, &hpack.HeaderField{Name: ":path", Value: req.URI})
-
+	hfs = append(hfs, &hpack.HeaderField{Name: ":authority", Value: req.Authority})
+	
 	if req.Scheme != "" {
 		hfs = append(hfs, &hpack.HeaderField{Name: ":scheme", Value: req.Scheme})
 	}
@@ -243,6 +267,7 @@ func initReqHFs(req *http.Request) []*hpack.HeaderField {
 	for k, v := range req.Header {
 		hfs = append(hfs, &hpack.HeaderField{Name: strings.ToLower(k), Value: v})
 	}
+
 	return hfs
 }
 

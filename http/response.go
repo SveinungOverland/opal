@@ -12,6 +12,11 @@ type Response struct {
 	Status uint16
 	Body   []byte
 	Header map[string]string
+
+
+	// RFC 7540 - Section 8.2 - Server Push
+	req *Request // Requests corresponding to the Response. Is used for Server Push
+	pushService *pushService // A pushService, storing all the push requests from Response.Push(path string)
 }
 
 // ----- BODY MODIFIERS -----
@@ -83,20 +88,37 @@ func (res *Response) NotFound() {
 	res.Status = 404
 }
 
+
+// ------ SERVER PUSH ---------
+
+// Push performs a push server
+func (res *Response) Push(path string) {
+	// Check if pushService is initialized
+	if res.pushService == nil {
+		res.pushService = newPushService(res)
+	}
+
+	res.pushService.Push(path)
+}
+
+// PushRequests returns all initialized Push-Requests
+func (res *Response) PushRequests() []*Request {
+	if res.pushService == nil {
+		return []*Request{}
+	}
+	return res.pushService.pushRequests
+}
+
 // ------ RESPONSE BUILDERS ------
 
-func NewResponse() *Response {
+// NewResponse creates a new response
+func NewResponse(req *Request) *Response {
 	res := &Response{
 		Status: 200,
 		Body:   make([]byte, 0),
 		Header: make(map[string]string),
+		req: req,
 	}
 	res.Header["content-type"] = "text/plain; charset=utf-8"
-	return res
-}
-
-func new404Response() *Response {
-	res := NewResponse()
-	res.Status = 404
 	return res
 }

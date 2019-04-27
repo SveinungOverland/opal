@@ -42,7 +42,9 @@ func serveStreamHandler(conn *Conn) {
 		select {
 		// Check if connection is done, if so, return
 		case <- conn.ctx.Done():
+			fmt.Println("Closing C");
 			return
+
 		// Check for and handle incoming stream
 		case s := <- conn.inChan:
 			req, err := createRequest(conn, s) // Header decompression, creating request

@@ -29,7 +29,7 @@ type responseWrapper struct {
 }
 
 // ServeStreamHandler handles incoming streams, build and sends responses, and handles push reqests
-func serveStreamHandler(ctx context.Context, conn *Conn) {
+func serveStreamHandler(conn *Conn) {
 	// A channel to handle finished requests (responses)
 	reqDoneChan := make(chan responseWrapper, 10)
 	pushReqChan := make(chan responseWrapper, 10) // Handels server push requests
@@ -42,7 +42,7 @@ func serveStreamHandler(ctx context.Context, conn *Conn) {
 	for {
 		select {
 		// Check if connection is done, if so, return
-		case <- ctx.Done():
+		case <- conn.ctx.Done():
 			return
 		// Check for and handle incoming stream
 		case s := <- conn.inChan:

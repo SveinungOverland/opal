@@ -1,7 +1,7 @@
 package opal
 
 import (
-	// "fmt"
+	"fmt"
 	"opal/frame"
 	"opal/frame/types"
 	"container/list"
@@ -119,6 +119,7 @@ func WriteStream(c *Conn) {
 		// This select block is not blocking to make sure the function keeps
 		// doing work if it exists
 		case <-c.ctx.Done():
+			fmt.Println("Closing B");
 			return
 		case stream := <- c.outChan:
 			addStream(stream)

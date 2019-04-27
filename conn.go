@@ -74,6 +74,7 @@ func (c *Conn) serve() {
 	// TODO: Check prefaceBuffer ^^
 	if !strings.HasPrefix(string(prefaceBuffer), "PRI") {
 		fmt.Println("Invalid HTTP/2 preface-buffer: " + string(prefaceBuffer))
+		return
 	}
 
 	settingsFrame, err := frame.ReadFrame(c.tlsConn)

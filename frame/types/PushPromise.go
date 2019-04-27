@@ -41,11 +41,11 @@ func (p PushPromisePayload) ReadPayload(payload []byte, length uint32, flags IFl
 }
 
 func (p PushPromisePayload) Bytes(flags IFlags) []byte {
-	buffer := make([]byte, 4+len(p.Fragment)+int(p.PadLength))
+	buffer := make([]byte, 4+len(p.Fragment)) // TODO: Support padding
 	binary.BigEndian.PutUint32(buffer[:4], p.StreamID)
 	copy(buffer[4:len(p.Fragment)], p.Fragment)
 	if p.PadLength != 0 {
-		buffer = append([]byte{p.PadLength}, buffer...)
+		buffer = append(buffer, make([]byte, p.PadLength)...)
 	}
 	return buffer
 }

@@ -2,7 +2,6 @@ package opal
 
 import (
 	"fmt"
-	"context"
 	"opal/errors"
 	"opal/http"
 	"opal/router"

@@ -200,8 +200,9 @@ func (c *Conn) serve() {
 			stream.headers = append(stream.headers, newFrame.Payload.(*types.ContinuationPayload).HeaderFragment...)
 		}
 
-		c.cancel()
 	}
+
+	c.cancel()
 
 	// windowUpdateFrame := frame.ReadFrame(c.tlsConn)
 	// fmt.Printf("Window update frame %+v\n", windowUpdateFrame)

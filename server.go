@@ -6,6 +6,8 @@ import (
 	"net"
 	"opal/router"
 	"opal/frame"
+
+	"context"
 )
 
 type Server struct {
@@ -64,7 +66,10 @@ func (s *Server) Register(r *router.Router) {
 }
 
 func (s *Server) createConn(conn net.Conn) *Conn {
+	ctx, cancel := context.WithCancel(context.Background())
 	c := &Conn{
+		ctx: ctx,
+		cancel: cancel,
 		server: s,
 		conn:   conn,
 		isTLS:  false,

@@ -34,6 +34,10 @@ type Conn struct {
 
 func (c *Conn) serve() {
 	// start := time.Now() // Request timer
+	defer c.cancel()
+	defer close(c.inChan)
+	defer close(c.outChan)
+	defer close(c.outChanFrame)
 
 	// Initialize TLS handshake
 	if c.isTLS {
@@ -201,8 +205,6 @@ func (c *Conn) serve() {
 		}
 
 	}
-
-	c.cancel()
 
 	// windowUpdateFrame := frame.ReadFrame(c.tlsConn)
 	// fmt.Printf("Window update frame %+v\n", windowUpdateFrame)

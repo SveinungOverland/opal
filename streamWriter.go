@@ -118,6 +118,8 @@ func WriteStream(c *Conn) {
 		select {
 		// This select block is not blocking to make sure the function keeps
 		// doing work if it exists
+		case <-c.ctx.Done():
+			return
 		case stream := <- c.outChan:
 			addStream(stream)
 		case frame := <- c.outChanFrame:
@@ -128,6 +130,8 @@ func WriteStream(c *Conn) {
 				select {
 				// This select block is blocking, so this function doesn't use up 
 				// resources endlessly looping
+				case <-c.ctx.Done():
+					return
 				case stream := <- c.outChan:
 					addStream(stream)
 				case frame := <- c.outChanFrame:

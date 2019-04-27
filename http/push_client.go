@@ -18,6 +18,7 @@ func (pc *PushClient) Push(path string) {
 	req := NewRequest()
 	req.Method = "GET"
 	req.URI = path
+	req.Scheme = pc.req.Scheme
 
 	// RFC7540 claims that a ":authority" pseudo-header must be sent where the server is authoriative
 	req.Authority = pc.req.Authority 

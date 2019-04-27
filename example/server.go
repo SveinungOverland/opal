@@ -37,9 +37,10 @@ func main() {
 
 	fmt.Println(r.Root())
 
-	/* r.Static("/css", "./css")
- */
+	/* r.Static("/css", "./css") */
+
 	srv.Register(r)
+	
 
 
 	log.Fatal(srv.Listen(8080))

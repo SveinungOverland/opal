@@ -2,6 +2,7 @@ package opal
 
 import (
 	"fmt"
+	"context"
 	"opal/errors"
 	"opal/http"
 	"opal/router"
@@ -28,7 +29,7 @@ type responseWrapper struct {
 }
 
 // ServeStreamHandler handles incoming streams, build and sends responses, and handles push reqests
-func serveStreamHandler(conn *Conn) {
+func serveStreamHandler(ctx context.Context, conn *Conn) {
 	// A channel to handle finished requests (responses)
 	reqDoneChan := make(chan responseWrapper, 10)
 	pushReqChan := make(chan responseWrapper, 10) // Handels server push requests
@@ -40,6 +41,9 @@ func serveStreamHandler(conn *Conn) {
 
 	for {
 		select {
+		// Check if connection is done, if so, return
+		case <- ctx.Done():
+			return
 		// Check for and handle incoming stream
 		case s := <- conn.inChan:
 			req, err := createRequest(conn, s) // Header decompression, creating request
@@ -174,6 +178,7 @@ func handleFile(res *http.Response, fh *router.FileHandler) {
 	} else {
 		res.Body = file // File found, return file
 		res.Header["content-type"] = fh.MimeType
+		res.Header["cache-control"] = "public"
 	}
 }
 
@@ -191,6 +196,10 @@ func newPushPromise(conn *Conn, req *http.Request, streamID uint32) *frame.Frame
 	// Initialize request headers
 	hfs := initReqHFs(req)
 
+	for _, hf := range hfs {
+		fmt.Printf("%s - %s\n", hf.Name, hf.Value)
+	}
+
 	// Encode headers
 	encodedHeaders := conn.hpack.Encode(hfs) // Header compression
 	payloadLength := uint32(len(encodedHeaders))
@@ -198,7 +207,7 @@ func newPushPromise(conn *Conn, req *http.Request, streamID uint32) *frame.Frame
 	// Choose next stream identifier
 	// RFC7540 - Section 5.1.1 states that new stream ids from the server must be even
 	conn.prevStreamID = conn.prevStreamID + 2 // prevStreamID starts at zero, so it is always even
-
+	fmt.Printf("New stream id: %d\n", conn.prevStreamID)
 	//pushPromise := types.CreatePushPromise(flags, encodedHeaders, payloadLength)
 
 	pushFrame := &frame.Frame {
@@ -213,7 +222,7 @@ func newPushPromise(conn *Conn, req *http.Request, streamID uint32) *frame.Frame
 			Fragment: encodedHeaders,
 			PadLength: 0,
 		},
-		Length: payloadLength,
+		Length: payloadLength + 4,
 	}
 
 	return pushFrame

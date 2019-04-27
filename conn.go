@@ -8,11 +8,15 @@ import (
 
 	"opal/frame"
 	"opal/frame/types"
+
+	"context"
 )
 
 const initialHeaderTableSize = uint32(4096)
 
 type Conn struct {
+	ctx           context.Context
+	cancel        context.CancelFunc
 	server        *Server
 	conn          net.Conn
 	tlsConn       *tls.Conn
@@ -50,12 +54,12 @@ func (c *Conn) serve() {
 	if err != nil {
 		// TODO: Handle error
 	}
+	fmt.Printf("HANDSHAKE FRAME: %+v\n", settingsFrame)
 	if settingsFrame.Type != frame.SettingsType {
 		// This should not happen but error should be handled
 		panic("Settings frame from handshake is of wrong type!")
 	}
 
-	fmt.Printf("HANDSHAKE FRAME: %+v\n", settingsFrame)
 	if settingsFrame.Length > 0 {
 		for key, value := range settingsFrame.Payload.(*types.SettingsPayload).IDValuePair {
 			if key >= 0x1 && key <= 0x6 {

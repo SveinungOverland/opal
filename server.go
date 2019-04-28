@@ -60,7 +60,7 @@ func (s *Server) Listen(port int16) error {
 	}
 }
 
-// Register registeres a router to the server
+// Register registers a router to the server
 func (s *Server) Register(r *router.Router) {
 	s.rootRoute.AppendRouter(r)
 }
@@ -107,9 +107,9 @@ func (s *Server) NonBlockingErrorChanSend(err error) {
 		select {
 		case *s.connErrorChan <- err:
 		default:
-			fmt.Println("Error occured but error channel could not receive it, buffer might be full")
+			fmt.Println("Error occurred but error channel could not receive it, buffer might be full")
 		}
 	} else {
-		fmt.Println("Error occured but error channel does not exist")
+		fmt.Println("Error occurred but error channel does not exist")
 	}
 }

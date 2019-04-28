@@ -1,5 +1,9 @@
 package http
 
+import (
+	"encoding/json"
+)
+
 // Request contains and manages all request-relevant data.
 type Request struct {
 	Method    string
@@ -13,9 +17,11 @@ type Request struct {
 
 	finished   bool   // Bool for deciding if next request can be handled
 	Finish func() // Changes the next-value to true
+}
 
-/* 	// RFC 7540 - Section 8.2 - Server Push
-	OnPush func(req *Request) // A method for describing the action of PushRequests */
+// JSON parses the request body as JSON into a target interface.
+func (r *Request) JSON(target interface{}) {
+	json.Unmarshal(r.Body, target)
 }
 
 // ----- PRIVATE METHODS ------

@@ -1,7 +1,6 @@
 package hpack
 
 import (
-	"opal/hpack"
 	"testing"
 	"github.com/go-test/deep"
 )
@@ -26,35 +25,6 @@ func TestEncodeDecodeLongHeaders(t *testing.T) {
 	}
 }
 
-func TestEncodeDecodeMap(t *testing.T) {
-	headers := map[string]string{
-		":authority": "https://example.com",
-		":method": "GET",
-		"cookie": "token: Bearer 32fd9oifjs90.23disjasod23.asdf2390j.adsfj0293rj",
-		"content-type": "application/json",
-		"content-length": "1234",
-	}
-
-	// Create encoder
-	c1 := hpack.NewContext(256, 256)
-	encodedHeaders := c1.EncodeMap(headers)
-
-	// Create decoder
-	c2 := hpack.NewContext(256, 256)
-	actual, err := c2.Decode(encodedHeaders)
-	if err != nil {
-		t.Error(err)
-	}
-
-	// Check if decoded header values match values in header-map
-	for _, hf := range actual {
-		val, ok := headers[hf.Name]
-		if !ok || val != hf.Value {
-			t.Error(err)
-		}
-	}
-}
-
 // ----- HELPERS ------
 
 // Tests encode and decode
@@ -62,11 +32,11 @@ func TestEncodeDecodeMap(t *testing.T) {
 // check if equal
 func encodeDecodeTest(t *testing.T, test hpackTest) {
 	// Create encoder
-	c1 := hpack.NewContext(256, 256)
+	c1 := NewContext(256, 256)
 	hfs := c1.Encode(test.expected)
 
 	// Create decoder
-	c2 := hpack.NewContext(256, 256)
+	c2 := NewContext(256, 256)
 	actual, err := c2.Decode(hfs)
 	if err != nil {
 		t.Error(err)
@@ -89,14 +59,14 @@ func encodeDecodeTest(t *testing.T, test hpackTest) {
 // ----- TEST DATA ------
 
 type encodeTest struct {
-	test []*hpack.HeaderField
+	test []*HeaderField
 }
 
 func getLongTestData() []hpackTest {
 	return []hpackTest{
 		{
 			"",
-			[]*hpack.HeaderField{
+			[]*HeaderField{
 				hf("cuuuuuuuuuuuuuuuussssssssssssssssssssssssssstttttttttttttooooooooooooooooommmmmmmmmmmmmmm-------------keeeeeeeeeeeeeeeeyyyyyy", "cuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusssssssssssstttttoooooooooooooooooooooooooooooommmmmmmmmmmmmm-vaaaaaaaaaaaaaaaaaaaaaaalllllllllllllllluuuuuuuuuuuuueeeeeeee"),
 				hf("2348768gdh45ygxfg34rsdfg4tsr", "asdf543gfasdfh43hkuilusdfg35bfdfgh34sgfdhksdas345sdfgbnhteese345sdfgsdfhjsdfg45sdfgasdfasdfasdfaaaaaddfukkfds<fdDFHDFHDgfdhghdfghdfghdfgh"),
 				hf("cookie", "token: eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJlYiI6InlnNTdSTDdjL2xxNjVLYmpxdWRaIiwianRpIjoiY2xhY2N0b2tfMDAwMDloWmZKcGthV1lPdnZ3RapplyIndexOrLength applyIndexOrLength applyIndexOrLength applyIndexOrLength applyIndexOrLength"),

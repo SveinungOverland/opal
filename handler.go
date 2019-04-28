@@ -160,7 +160,6 @@ func sendResponse(conn *Conn, s *Stream, res *http.Response) {
 // SendPushRequest serves a list of requests, builds corresponding responses, and sends new push_promise frames.
 // Returns an array containing the responses and created streams.
 func sendPushRequest(conn *Conn, reqs []*http.Request, s *Stream) ([]*responseWrapper) {
-
 	pushResponses := make([]*responseWrapper, 0)
 
 	// For all push requests

@@ -2,7 +2,6 @@ package hpack
 
 import (
 	"fmt"
-	"strings"
 )
 
 const defaultDynTabSize = 4096
@@ -40,16 +39,6 @@ func (c *Context) Encode(hfs []*HeaderField) ([]byte) {
 	var bytes []byte
 	for _, hf := range hfs {
 		buf := c.Encoder.EncodeField(hf)
-		bytes = append(bytes, buf...)
-	}
-	return bytes
-}
-
-// EncodeMap encodes a set of headers from a map
-func (c *Context) EncodeMap(headers map[string]string) ([]byte) {
-	var bytes []byte
-	for k, v := range headers {
-		buf := c.Encoder.EncodeField(&HeaderField{Name: strings.ToLower(k), Value: v})
 		bytes = append(bytes, buf...)
 	}
 	return bytes

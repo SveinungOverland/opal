@@ -37,7 +37,7 @@ func (res *Response) File(path string, contentType string) {
 	}
 
 	res.Body = file
-	res.Header["Content-Type"] = contentType
+	res.Header["content-type"] = contentType
 }
 
 // HTML reads an html-file and builds a html-response. Includes support for templates.

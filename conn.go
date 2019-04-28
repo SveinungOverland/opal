@@ -126,10 +126,11 @@ func (c *Conn) serve() {
 			Ack: true,
 		},
 	}
-	c.outChanFrame <- settingsResponse
-	
+
 	go serveStreamHandler(c) // Starting go-routine that is responsible for handling requests when streams are done
 	go WriteStream(c) // Starting go-routine that is responsible for handling handled requests that should be written back to client
+	
+	c.outChanFrame <- settingsResponse
 	
 	// Connection initiated and ready to receive header frames
 	// errors.EnhanceYourCalm

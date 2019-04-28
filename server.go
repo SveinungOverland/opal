@@ -76,8 +76,8 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 		isTLS:  false,
 		streams: make(map[uint32]*Stream),
 		inChan: make(chan *Stream, 10),
-		outChan: make(chan *Stream, 1),
-		outChanFrame: make(chan *frame.Frame, 1),
+		outChan: make(chan *Stream, 10),
+		outChanFrame: make(chan *frame.Frame),
 		settings: map[uint16]uint32{
 			// !ok value should be treated as no-limit
 			1: 4096, // Header Table Size

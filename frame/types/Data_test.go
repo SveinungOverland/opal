@@ -1,10 +1,18 @@
 package types
 
-var testFlagsByte = 0x1
+import (
+	"testing"
+)
+
+var testFlagsByte = byte(0x1)
 var testFlagsStruct = DataFlags{
-	EndStream: true
+	EndStream: true,
 }
 
-func TestFlags(t *testing.T) {
-	
+func TestBytesToFlag(t *testing.T) {
+	flags := DataFlags{}
+	flags.ReadFlags(testFlagsByte)
+	if flags.EndStream != true {
+		t.Error("Flags were not read correctly")
+	}
 }

@@ -6,37 +6,38 @@ import (
 	"net"
 	"opal/hpack"
 
+	"opal/errors"
 	"opal/frame"
 	"opal/frame/types"
-	"opal/errors"
 
-	error "errors"
 	"context"
-	"sync"
+	error "errors"
 	"strings"
+	"sync"
 )
 
 const initialHeaderTableSize = uint32(4096)
+
 var streamMapMutex = sync.Mutex{}
 
 // Conn represents a HTTP-connection
 type Conn struct {
-	ctx           context.Context
-	cancel        context.CancelFunc
-	server        *Server
-	conn          net.Conn
-	tlsConn       *tls.Conn
-	hpack         *hpack.Context
+	ctx               context.Context
+	cancel            context.CancelFunc
+	server            *Server
+	conn              net.Conn
+	tlsConn           *tls.Conn
+	hpack             *hpack.Context
 	lastReceivedFrame *frame.Frame
-	windowSize    uint32
-	isTLS         bool
-	maxConcurrent uint32
-	streams       map[uint32]*Stream // map streamId to Stream instance
-	inChan		  chan *Stream // Channel for handling new ended stream
-	outChan       chan *Stream // Channel for sending finished streams
-	outChanFrame  chan *frame.Frame // Channel for sending single Frame's
-	settings      map[uint16]uint32
-	prevStreamID  uint32 // The previous created stream's identifer.
+	windowSize        uint32
+	isTLS             bool
+	maxConcurrent     uint32
+	streams           map[uint32]*Stream // map streamId to Stream instance
+	inChan            chan *Stream       // Channel for handling new ended stream
+	outChan           chan *Stream       // Channel for sending finished streams
+	outChanFrame      chan *frame.Frame  // Channel for sending single Frame's
+	settings          map[uint16]uint32
+	prevStreamID      uint32 // The previous created stream's identifer.
 }
 
 // SetStream sets the stream
@@ -61,16 +62,15 @@ func (c *Conn) serve() {
 	defer close(c.outChan)
 	defer close(c.outChanFrame)
 
-
 	// Helper funcs
 	NewConnErr := func(connErr uint32) *frame.Frame {
 		return &frame.Frame{
-			ID: 0,
-			Type: frame.GoAwayType,
+			ID:    0,
+			Type:  frame.GoAwayType,
 			Flags: &types.GoAwayFlags{},
 			Payload: &types.GoAwayPayload{
 				LastStreamID: c.lastReceivedFrame.ID,
-				ErrorCode: connErr,
+				ErrorCode:    connErr,
 			},
 			Length: 8,
 		}
@@ -99,7 +99,7 @@ func (c *Conn) serve() {
 	if err != nil {
 		c.server.NonBlockingErrorChanSend(err)
 	}
-	
+
 	if settingsFrame.Type != frame.SettingsType {
 		// This should not happen but error should be handled
 		panic("Settings frame from handshake is of wrong type!")
@@ -127,13 +127,14 @@ func (c *Conn) serve() {
 		},
 	}
 	c.outChanFrame <- settingsResponse
-	
+
 	go serveStreamHandler(c) // Starting go-routine that is responsible for handling requests when streams are done
-	go WriteStream(c) // Starting go-routine that is responsible for handling handled requests that should be written back to client
-	
+	go WriteStream(c)        // Starting go-routine that is responsible for handling handled requests that should be written back to client
+
 	// Connection initiated and ready to receive header frames
 	// errors.EnhanceYourCalm
-	loop: for {
+loop:
+	for {
 		select {
 		case <-c.ctx.Done():
 			break loop
@@ -187,7 +188,7 @@ func (c *Conn) serve() {
 			}
 			newStream := &Stream{
 				id:               newFrame.ID,
-				state: 			  streamState,
+				state:            streamState,
 				lastFrame:        &newFrame,
 				headers:          newFrame.Payload.(*types.HeadersPayload).Fragment,
 				streamDependency: newFrame.Payload.(*types.HeadersPayload).StreamDependency,
@@ -199,7 +200,7 @@ func (c *Conn) serve() {
 			}
 		case frame.PriorityType:
 			stream, ok := c.GetStream(newFrame.ID)
-			if newFrame.ID == 0 {	
+			if newFrame.ID == 0 {
 				c.outChanFrame <- NewConnErr(errors.ProtocolError)
 				continue loop
 			}
@@ -209,10 +210,10 @@ func (c *Conn) serve() {
 			}
 			if !ok {
 				stream = &Stream{
-					id: newFrame.ID,
-					state: Idle,
+					id:        newFrame.ID,
+					state:     Idle,
 					lastFrame: &newFrame,
-					headers: make([]byte, 0),
+					headers:   make([]byte, 0),
 				}
 			}
 			stream.priorityWeight = newFrame.Payload.(*types.PriorityPayload).PriorityWeight
@@ -244,7 +245,7 @@ func (c *Conn) serve() {
 				}
 				continue loop
 			}
-			if newFrame.Length % 6 != 0 {
+			if newFrame.Length%6 != 0 {
 				c.outChanFrame <- NewConnErr(errors.FrameSizeError)
 				continue loop
 			}
@@ -278,13 +279,13 @@ func (c *Conn) serve() {
 			}
 			if !newFrame.Flags.(*types.PingFlags).Ack {
 				pingResponse := &frame.Frame{
-					ID: 0,
+					ID:   0,
 					Type: frame.PingType,
 					Flags: &types.PingFlags{
 						Ack: true,
 					},
 					Payload: newFrame.Payload,
-					Length: 8,
+					Length:  8,
 				}
 				c.outChanFrame <- pingResponse
 			}
@@ -328,5 +329,3 @@ func (c *Conn) serve() {
 		c.lastReceivedFrame = &newFrame
 	}
 }
-
-

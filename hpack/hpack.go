@@ -15,7 +15,7 @@ type Context struct {
 // NewContext creates a new hpack-context. It initializes a new dynamic table with a given
 // max-size.
 func NewContext(encoderDynTabMaxSize uint32, decoderDynTabMaxSize uint32) *Context {
-	
+
 	// Initialize Decoder
 	decoder := NewDecoder(decoderDynTabMaxSize)
 
@@ -35,7 +35,7 @@ func (c *Context) Decode(bytes []byte) ([]*HeaderField, error) {
 }
 
 // Encode encodes a set of headers
-func (c *Context) Encode(hfs []*HeaderField) ([]byte) {
+func (c *Context) Encode(hfs []*HeaderField) []byte {
 	var bytes []byte
 	for _, hf := range hfs {
 		buf := c.Encoder.EncodeField(hf)

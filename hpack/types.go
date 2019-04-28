@@ -6,12 +6,12 @@ import "fmt"
 
 type headerFieldRepr byte
 
-var indexed headerFieldRepr = headerFieldRepr(0)
-var litrWithIndex headerFieldRepr = headerFieldRepr(1)
-var litrWithoutIndex headerFieldRepr = headerFieldRepr(2)
-var litrNeverIndexed headerFieldRepr = headerFieldRepr(3)
-var dynTabSizeUpdate headerFieldRepr = headerFieldRepr(4)
-var invalidHFRepr headerFieldRepr = headerFieldRepr(5)
+var indexed = headerFieldRepr(0)
+var litrWithIndex = headerFieldRepr(1)
+var litrWithoutIndex = headerFieldRepr(2)
+var litrNeverIndexed = headerFieldRepr(3)
+var dynTabSizeUpdate = headerFieldRepr(4)
+var invalidHFRepr = headerFieldRepr(5)
 
 // ---- ERRORS ------
 type decodingError struct {

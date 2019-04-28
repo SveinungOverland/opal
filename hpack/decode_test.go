@@ -2,8 +2,8 @@ package hpack
 
 import (
 	"encoding/hex"
-	"testing"
 	"github.com/go-test/deep"
+	"testing"
 )
 
 // TestDecode tests Decode.decode()

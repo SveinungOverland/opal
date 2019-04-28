@@ -153,7 +153,7 @@ func (c *Conn) serve() {
 			if !ok {
 				continue loop
 			}
-			if stream.state != Open || stream.state != HalfClosedLocal {
+			if !(stream.state == Open || stream.state == HalfClosedLocal) {
 				// Stream is not in a state where it can receive data frames
 				c.outChanFrame <- frame.NewErrorFrame(stream.id, errors.StreamClosed)
 				continue loop

@@ -2,12 +2,12 @@ package opal
 
 import (
 	"fmt"
-	"opal/errors"
-	"opal/frame"
-	"opal/frame/types"
-	"opal/hpack"
-	"opal/http"
-	"opal/router"
+	"github.com/SveinungOverland/opal/errors"
+	"github.com/SveinungOverland/opal/frame"
+	"github.com/SveinungOverland/opal/frame/types"
+	"github.com/SveinungOverland/opal/hpack"
+	"github.com/SveinungOverland/opal/http"
+	"github.com/SveinungOverland/opal/router"
 	"strconv"
 	"strings"
 	"sync"

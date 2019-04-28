@@ -1,7 +1,7 @@
 package router
 
 import (
-	"opal/http"
+	"github.com/SveinungOverland/opal/http"
 	"testing"
 )
 

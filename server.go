@@ -3,9 +3,9 @@ package opal
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/SveinungOverland/opal/frame"
+	"github.com/SveinungOverland/opal/router"
 	"net"
-	"opal/frame"
-	"opal/router"
 
 	"context"
 )

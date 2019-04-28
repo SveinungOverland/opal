@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"opal/http"
-	"opal/router"
+	"github.com/SveinungOverland/opal/http"
+	"github.com/SveinungOverland/opal/router"
 )
 
 func handler(req *http.Request, res *http.Response) {

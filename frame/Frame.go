@@ -3,8 +3,8 @@ package frame
 import (
 	"encoding/binary"
 	// "fmt"
+	"github.com/SveinungOverland/opal/frame/types"
 	"io"
-	"opal/frame/types"
 )
 
 // Create an enum for known types

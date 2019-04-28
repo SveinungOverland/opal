@@ -1,4 +1,4 @@
-module opal
+module github.com/SveinungOverland/opal
 
 go 1.12
 

@@ -1,7 +1,7 @@
 package router
 
 import (
-	"opal/http"
+	"github.com/SveinungOverland/opal/http"
 )
 
 // HandleFunc is function that represents the handler for a HTTP-Endpoint

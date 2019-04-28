@@ -1,7 +1,7 @@
 package hpack
 
 import (
-	huff "opal/hpack/huffman"
+	huff "github.com/SveinungOverland/opal/hpack/huffman"
 )
 
 // Encoder manages the encoding of headerfields

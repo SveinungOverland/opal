@@ -2,8 +2,8 @@ package opal
 
 import (
 	"container/list"
-	"opal/frame"
-	"opal/frame/types"
+	"github.com/SveinungOverland/opal/frame"
+	"github.com/SveinungOverland/opal/frame/types"
 )
 
 /*

@@ -3,12 +3,12 @@ package opal
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/SveinungOverland/opal/hpack"
 	"net"
-	"opal/hpack"
 
-	"opal/errors"
-	"opal/frame"
-	"opal/frame/types"
+	"github.com/SveinungOverland/opal/errors"
+	"github.com/SveinungOverland/opal/frame"
+	"github.com/SveinungOverland/opal/frame/types"
 
 	"context"
 	error "errors"

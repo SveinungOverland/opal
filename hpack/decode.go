@@ -3,7 +3,7 @@ package hpack
 import (
 	"errors"
 	"fmt"
-	huff "opal/hpack/huffman"
+	huff "github.com/SveinungOverland/opal/hpack/huffman"
 )
 
 // Decoder manages the decoding of headerfields

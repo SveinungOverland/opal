@@ -1,9 +1,9 @@
 package opal
 
 import (
-	"opal/frame"
-	"opal/hpack"
-	"opal/http"
+	"github.com/SveinungOverland/opal/frame"
+	"github.com/SveinungOverland/opal/hpack"
+	"github.com/SveinungOverland/opal/http"
 	"strings"
 )
 

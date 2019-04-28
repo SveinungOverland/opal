@@ -1,8 +1,8 @@
 package hpack
 
 import (
-	"testing"
 	"github.com/go-test/deep"
+	"testing"
 )
 
 // ----- TESTS --------

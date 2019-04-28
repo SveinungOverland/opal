@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/SveinungOverland/opal"
+	"github.com/SveinungOverland/opal/http"
+	"github.com/SveinungOverland/opal/router"
 	"log"
-	"opal"
-	opalHttp "opal/http"
-	"opal/router"
 	"os"
 	"runtime/pprof"
 	"time"
@@ -27,11 +27,11 @@ func main() {
 	}
 
 	r := router.NewRouter("/")
-	r.Get("/", func(req *opalHttp.Request, res *opalHttp.Response) {
+	r.Get("/", func(req *http.Request, res *http.Response) {
 		res.Body = []byte("Hello World")
 	})
 
-	r.Get("/site", func(req *opalHttp.Request, res *opalHttp.Response) {
+	r.Get("/site", func(req *http.Request, res *http.Response) {
 		res.Body = []byte("<html><head><link rel=\"stylesheet\" type=\"text/css\" href=\"css\\theme.css\"></head><body><div id=\"main\"><h4>Hello World! :D</h4><a href=\"\\\">Click here</a></div><img src=\"css\\logo.png\" /><script src=\"css\\app.js\"></script></body></html>")
 		res.Header["content-type"] = "text/html; charset=utf-8"
 

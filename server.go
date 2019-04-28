@@ -4,8 +4,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
-	"opal/router"
 	"opal/frame"
+	"opal/router"
 
 	"context"
 )
@@ -69,19 +69,19 @@ func (s *Server) Register(r *router.Router) {
 func (s *Server) createConn(conn net.Conn) *Conn {
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &Conn{
-		ctx: ctx,
-		cancel: cancel,
-		server: s,
-		conn:   conn,
-		isTLS:  false,
-		streams: make(map[uint32]*Stream),
-		inChan: make(chan *Stream, 10),
-		outChan: make(chan *Stream, 10),
+		ctx:          ctx,
+		cancel:       cancel,
+		server:       s,
+		conn:         conn,
+		isTLS:        false,
+		streams:      make(map[uint32]*Stream),
+		inChan:       make(chan *Stream, 10),
+		outChan:      make(chan *Stream, 10),
 		outChanFrame: make(chan *frame.Frame),
 		settings: map[uint16]uint32{
 			// !ok value should be treated as no-limit
 			1: 4096, // Header Table Size
-			2: 1, // Enable Push
+			2: 1,    // Enable Push
 			//3: no-limit,  // Max Concurrent Streams
 			4: 65535, // Initial Window Size
 			5: 16384, // Max Frame Size

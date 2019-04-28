@@ -1,9 +1,9 @@
 package opal
 
 import (
+	"container/list"
 	"opal/frame"
 	"opal/frame/types"
-	"container/list"
 )
 
 /*
@@ -11,7 +11,6 @@ import (
 	to the client through the outChan channel made for each
 	connection (Conn)
 */
-
 
 func WriteStream(c *Conn) {
 	// Init variables needed for function
@@ -24,7 +23,7 @@ func WriteStream(c *Conn) {
 		}
 		frames.PushBack(f)
 	}
-	
+
 	addStream := func(s *Stream) {
 		if s == nil {
 			return
@@ -46,12 +45,12 @@ func WriteStream(c *Conn) {
 		}
 
 		headerFramesNeeded := ((headerLength + offset) + maxPayloadSize - 1) / maxPayloadSize // Ceil of int division
-		
+
 		if headerFramesNeeded == 1 {
 			headerFlags.EndHeaders = true
 			headersPayload.Fragment = s.headers
 		} else {
-			headersPayload.Fragment = s.headers[:maxPayloadSize-offset] // Subtracting offset in case priority flag is set 
+			headersPayload.Fragment = s.headers[:maxPayloadSize-offset] // Subtracting offset in case priority flag is set
 		}
 
 		if len(s.data) == 0 {
@@ -59,11 +58,11 @@ func WriteStream(c *Conn) {
 		}
 
 		headerFrame := &frame.Frame{
-			ID: s.id,
-			Type: frame.HeadersType,
-			Flags: headerFlags,
+			ID:      s.id,
+			Type:    frame.HeadersType,
+			Flags:   headerFlags,
 			Payload: headersPayload,
-			Length: uint32(len(headersPayload.Fragment)) + offset,
+			Length:  uint32(len(headersPayload.Fragment)) + offset,
 		}
 		addFrame(headerFrame)
 		for i := uint32(1); i < headerFramesNeeded; i++ {
@@ -77,8 +76,8 @@ func WriteStream(c *Conn) {
 				headerFragment = s.headers[i*maxPayloadSize-offset:][:maxPayloadSize]
 			}
 			continuationFrame := &frame.Frame{
-				ID: s.id,
-				Type: frame.ContinuationType,
+				ID:    s.id,
+				Type:  frame.ContinuationType,
 				Flags: flags,
 				Payload: &types.ContinuationPayload{
 					HeaderFragment: headerFragment,
@@ -103,8 +102,8 @@ func WriteStream(c *Conn) {
 			}
 
 			dataFrame := &frame.Frame{
-				ID: s.id,
-				Type: frame.DataType,
+				ID:    s.id,
+				Type:  frame.DataType,
 				Flags: dataFlags,
 				Payload: &types.DataPayload{
 					Data: data,
@@ -122,21 +121,21 @@ func WriteStream(c *Conn) {
 		// doing work if it exists
 		case <-c.ctx.Done():
 			return
-		case stream := <- c.outChan:
+		case stream := <-c.outChan:
 			addStream(stream)
-		case frame := <- c.outChanFrame:
+		case frame := <-c.outChanFrame:
 			addFrame(frame)
 		default:
 			if frames.Len() == 0 {
 				// If frame slice is empty reset the size to avoid memory leak
 				select {
-				// This select block is blocking, so this function doesn't use up 
+				// This select block is blocking, so this function doesn't use up
 				// resources endlessly looping
 				case <-c.ctx.Done():
 					return
-				case stream := <- c.outChan:
+				case stream := <-c.outChan:
 					addStream(stream)
-				case frame := <- c.outChanFrame:
+				case frame := <-c.outChanFrame:
 					addFrame(frame)
 				}
 			}
@@ -150,7 +149,7 @@ func WriteStream(c *Conn) {
 			if frameValue == nil {
 				return
 			}
-		
+
 			c.tlsConn.Write(frameValue.(*frame.Frame).ToBytes())
 			frames.Remove(frameToWrite)
 		}

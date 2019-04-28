@@ -2,7 +2,6 @@ package huff
 
 import (
 	"encoding/hex"
-	huff "opal/hpack/huffman"
 	"testing"
 )
 
@@ -24,7 +23,7 @@ var testData = []struct {
 func TestEncode(t *testing.T) {
 	for _, test := range testData {
 		expected := test.encodedHex
-		actualBytes := huff.Encode([]byte(test.value))
+		actualBytes := Encode([]byte(test.value))
 		actual := hex.EncodeToString(actualBytes)
 		assertEqual(t, actual, expected)
 	}
@@ -34,7 +33,7 @@ func TestDecode(t *testing.T) {
 	for _, test := range testData {
 		expected := test.value
 		bytes, _ := hex.DecodeString(test.encodedHex)
-		actual, _ := huff.Decode(bytes)
+		actual, _ := Decode(bytes)
 		assertEqual(t, string(actual), expected)
 	}
 }
@@ -42,8 +41,8 @@ func TestDecode(t *testing.T) {
 func TestEncodeAndDecode(t *testing.T) {
 	for _, test := range testData {
 		expected := []byte(test.value)
-		encoded := huff.Encode(expected)
-		decoded, _ := huff.Decode(encoded)
+		encoded := Encode(expected)
+		decoded, _ := Decode(encoded)
 		assertEqual(t, string(decoded), string(expected))
 	}
 }

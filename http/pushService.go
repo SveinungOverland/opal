@@ -1,14 +1,14 @@
 package http
 
 type pushService struct {
-	res *Response
+	res          *Response
 	pushRequests []*Request
 }
 
 // NewPusher creates a new PushClient for sending push-requests
-func newPushService(res *Response) (*pushService) {
-	return &pushService {
-		res: res,
+func newPushService(res *Response) *pushService {
+	return &pushService{
+		res:          res,
 		pushRequests: make([]*Request, 0),
 	}
 }
@@ -21,10 +21,7 @@ func (ps *pushService) Push(path string) {
 	req.Scheme = ps.res.req.Scheme
 
 	// RFC7540 claims that a ":authority" pseudo-header must be sent where the server is authoriative
-	req.Authority = ps.res.req.Authority 
-	
+	req.Authority = ps.res.req.Authority
+
 	ps.pushRequests = append(ps.pushRequests, req)
 }
-
-
-

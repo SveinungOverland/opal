@@ -27,15 +27,18 @@ func newRoute(pathValue string) *Route {
 	}
 }
 
+// NewRoot creates a new Route with the path "/".
 func NewRoot() *Route {
 	return newRoute("/")
 }
 
+// AppendRouter adds all the routes inside a given router to the route.
 func (r *Route) AppendRouter(router *Router) {
 	leafRoute, _ := createOrFindRoute(r, router.basePath)
 	leafRoute.merge(router.root)
 }
 
+// Search searches for a route on a specific path on the route.
 func (r *Route) Search(path string) (match bool, route *Route, params map[string]string, fh *FileHandler) {
 	return search(r, path)
 }
@@ -55,6 +58,7 @@ func (r *Route) addHandlers(method string, funcs []HandleFunc) {
 	}
 }
 
+// GetHandlers gets the handlers for a given method
 func (r *Route) GetHandlers(method string) []HandleFunc {
 	switch method {
 	case "GET":

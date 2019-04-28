@@ -20,7 +20,7 @@ func NewEncoder(dynTabMaxSize uint32) *Encoder {
 }
 
 // EncodeField encodes a given headerfield and returns the sequence of encoded bytes
-func (e *Encoder) EncodeField(hf *HeaderField) ([]byte) {
+func (e *Encoder) EncodeField(hf *HeaderField) []byte {
 	e.buf = make([]byte, 0)
 
 	// Check if header exists in the static or the dynamic table
@@ -89,7 +89,7 @@ func (e *Encoder) encodeField(hf *HeaderField, isIndexed bool) {
 }
 
 // ----- HELPERS -----
-func encodeLitrString(buf []byte, s string) ([]byte) {
+func encodeLitrString(buf []byte, s string) []byte {
 	// Decode string with huffman
 	huffDecoded := huff.Encode([]byte(s))
 

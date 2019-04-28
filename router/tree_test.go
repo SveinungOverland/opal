@@ -27,6 +27,20 @@ func TestSearchParams(t *testing.T) {
 	testSearchParams(t, root, "/bbbb/123.123/asdf.asdf/asdf", false, testParam{"lat", "123.123"}, testParam{"lng", "asdf.asdf"})
 }
 
+func TestStaticSearch(t *testing.T) {
+	r := getSearchTestRouter("/")
+	r.Static("/", "./testPath")
+
+	// Test static route from root
+	testStaticPath(t, r.Root(), "/myTestFile.txt", "./testPath/myTestFile.txt", "text/plain")
+
+	// Test static route from path not equal to root
+	r = NewRouter("/")
+	r.Static("/staticPath", "./")
+	testStaticPath(t, r.Root(), "/staticPath/styles.css", "./styles.css", "text/css")
+
+}
+
 func TestCreateOrFindRoute(t *testing.T) {
 	route := newRoute("/")
 
@@ -104,4 +118,22 @@ func testSearchParams(t *testing.T, root *Route, path string, shouldMatch bool, 
 		}
 	}
 
+}
+
+func testStaticPath(t *testing.T, root *Route, path, fullFilePath string, mimeType string) {
+	match, _, _, fh := search(root, path)
+	if match {
+		t.Error("Found matching route on static path!")
+	}
+	if fh == nil {
+		t.Error("Got nil as fileHandler on static path!")
+		return
+	}
+
+	if fh.FullPath() != fullFilePath {
+		t.Errorf("Incorrect file path in filehandler. Expected %s, got %s", fullFilePath, fh.FullPath())
+	}
+	if fh.MimeType != mimeType {
+		t.Errorf("Incorrect mimetype in filehandler. Expected %s, got %s", mimeType, fh.MimeType)
+	}
 }

@@ -1,16 +1,16 @@
 package frame
 
 import (
-	"testing"
-	"opal/frame/types"
 	"bytes"
+	"github.com/SveinungOverland/opal/errors"
+	"github.com/SveinungOverland/opal/frame/types"
 	"reflect"
-	"opal/errors"
+	"testing"
 )
 
 var testFrame = &Frame{
-	ID: 0,
-	Type: PingType,
+	ID:    0,
+	Type:  PingType,
 	Flags: &types.PingFlags{},
 	Payload: &types.PingPayload{
 		Data: make([]byte, 8),
@@ -18,7 +18,7 @@ var testFrame = &Frame{
 	Length: 8,
 }
 
-var testBytes = []byte{0,0,8,6,0,0,0,0,0,0,0,0,0,0,0,0,0}
+var testBytes = []byte{0, 0, 8, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 func TestFrameToBytes(t *testing.T) {
 	frameBytes := testFrame.ToBytes()
@@ -50,7 +50,7 @@ func TestFrameRead(t *testing.T) {
 }
 
 func TestNewErrorFrame(t *testing.T) {
-	testErrorBytes := []byte{0,0,4,3,0,0,0,0,0,0,0,0,11}
+	testErrorBytes := []byte{0, 0, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0, 11}
 
 	newErrorFrame := NewErrorFrame(0, errors.EnhanceYourCalm)
 

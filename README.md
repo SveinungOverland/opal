@@ -8,5 +8,5 @@
 TDAT2004 Datakommunikasjon med nettverksprogrammering avsluttende prosjekt 2019
 
 ## Authors
-<a href="https://github.com/Andorr"><img src="https://avatars2.githubusercontent.com/u/31648998?s=400&v=4" width=40 target="_blank"/></a>
-<a href="https://github.com/SveinungOverland"><img src="https://avatars0.githubusercontent.com/u/39273837?s=460&v=4" width=40 target="_blank"/></a>
+<a href="https://github.com/Andorr" target="_blank"><img src="https://avatars2.githubusercontent.com/u/31648998?s=400&v=4" width=40 title="Andorr"/></a>
+<a href="https://github.com/SveinungOverland" target="_blank"><img src="https://avatars0.githubusercontent.com/u/39273837?s=460&v=4" width=40 title="SveinungOverland"/></a>

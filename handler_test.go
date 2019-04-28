@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// TestStreamHandlerIntegration tests serveStreamHandler function, which will then be an intergration
+// TestStreamHandlerIntegration tests serveStreamHandler function, which will then be an integration
 // test between all the other logic in handler.go
 func TestStreamHandlerIntegration(t *testing.T) {
 	testCxt, cancelFunc := context.WithTimeout(context.Background(), 10*time.Second) // Context for timeout check
@@ -50,7 +50,7 @@ func TestStreamHandlerIntegration(t *testing.T) {
 	for recStreamCount < 3 {
 		select {
 		case <-testCxt.Done(): // Timeout check
-			t.Error("Not all streams was recieved!")
+			t.Error("Not all streams was received!")
 			break
 		case stream := <-conn.outChan:
 			recStreamCount++
@@ -87,10 +87,10 @@ func TestStreamHandlerIntegration(t *testing.T) {
 		}
 	}
 
-	// Check if all streams sent are recieved
+	// Check if all streams sent are received
 	for i, recv := range recStreams {
 		if !recv {
-			t.Errorf("Stream %d was not recieved!", i)
+			t.Errorf("Stream %d was not received!", i)
 		}
 	}
 
@@ -114,7 +114,7 @@ func TestSendResponse(t *testing.T) {
 
 	// Check stream id
 	if outStream.id != 1 {
-		t.Errorf("Invalid stream id recieved! Expected %d, got %d", 1, outStream.id)
+		t.Errorf("Invalid stream id received! Expected %d, got %d", 1, outStream.id)
 	}
 
 	// Check stream headers
@@ -240,7 +240,7 @@ func validateHeaders(t *testing.T, s *Stream, actual []*hpack.HeaderField, expec
 func validateData(t *testing.T, s *Stream, expected string) {
 	actual := string(s.data)
 	if actual != expected {
-		t.Errorf("Incorrect data recieved from stream %d. Expected %s, got %s!", s.id, expected, actual)
+		t.Errorf("Incorrect data received from stream %d. Expected %s, got %s!", s.id, expected, actual)
 	}
 }
 

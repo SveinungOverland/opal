@@ -249,7 +249,7 @@ func newPushPromise(conn *Conn, req *http.Request, s *Stream) *frame.Frame {
 	return pushFrame
 }
 
-// InitReqHFs converts a request into a list of headerfields. Psuedo-Headerfields will come first.
+// InitReqHFs converts a request into a list of headerfields. Pseudo-Headerfields will come first.
 func initReqHFs(req *http.Request) []*hpack.HeaderField {
 	hfs := make([]*hpack.HeaderField, 0)
 	hfs = append(hfs, &hpack.HeaderField{Name: ":method", Value: req.Method})

@@ -20,7 +20,7 @@ func createNode() *node {
 	return &node{-1, nil, nil}
 }
 
-// BuildTree buildes the huffman tree based on the ASCII-table and returns the root node
+// BuildTree builds the huffman tree based on the ASCII-table and returns the root node
 func buildTree(table *HuffTable) (root *node) {
 	root = createNode()
 

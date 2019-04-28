@@ -28,7 +28,7 @@ func createOrFindRoute(root *Route, fullPath string) (*Route, bool) {
 
 		// Check if path is a parameter
 		if strings.HasPrefix(path, ":") {
-			// If the route already has a paramter subscribed, panic
+			// If the route already has a parameter subscribed, panic
 			if curRoute.paramRoute != nil {
 				panic(fmt.Sprintf("Path '%s' conflicts with existing route due to '%s'", fullPath, path))
 			}

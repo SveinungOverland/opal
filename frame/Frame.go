@@ -144,7 +144,7 @@ func (f *Frame) ToBytes() []byte {
 	return frameHeader
 }
 
-// NewErrorFrame is a helper function for easily creating RstStream frames that occour on various errors
+// NewErrorFrame is a helper function for easily creating RstStream frames that occur on various errors
 func NewErrorFrame(streamID, errorCode uint32) *Frame {
 	return &Frame{
 		ID:    streamID,

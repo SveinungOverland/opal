@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// TestData recieved from RFC7541 - Section C.4
+// TestData received from RFC7541 - Section C.4
 var testData = []struct {
 	value, encodedHex string
 }{

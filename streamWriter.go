@@ -1,7 +1,6 @@
 package opal
 
 import (
-	"fmt"
 	"opal/frame"
 	"opal/frame/types"
 	"container/list"
@@ -20,11 +19,17 @@ func WriteStream(c *Conn) {
 
 	// Helper funcs
 	addFrame := func(f *frame.Frame) {
+		if f == nil {
+			return
+		}
 		frames.PushBack(f)
 	}
 	
 	addStream := func(s *Stream) {
-		// fmt.Printf("Adding stream %+v\n", s)
+		if s == nil {
+			return
+		}
+
 		// TODO: Check stream state, to make sure client is waiting to receive frames
 		maxPayloadSize := c.settings[5]
 		// Create Header Frame
@@ -83,9 +88,7 @@ func WriteStream(c *Conn) {
 			addFrame(continuationFrame)
 		}
 		// Create payload frames
-		// fmt.Println(s.data)
 		dataLength := uint32(len(s.data))
-		// fmt.Println("DATALENGTH:::", dataLength)
 		dataFramesNeeded := (dataLength + maxPayloadSize - 1) / maxPayloadSize // Ceil of int division
 		for i := uint32(0); i < dataFramesNeeded; i++ {
 
@@ -114,12 +117,10 @@ func WriteStream(c *Conn) {
 
 	// Listen for new writable streams or frame
 	for {
-		// fmt.Println("StreamWriter is looping")
 		select {
 		// This select block is not blocking to make sure the function keeps
 		// doing work if it exists
 		case <-c.ctx.Done():
-			fmt.Println("Closing B");
 			return
 		case stream := <- c.outChan:
 			addStream(stream)
@@ -142,7 +143,15 @@ func WriteStream(c *Conn) {
 			// Write next frame
 			// fmt.Printf("Writing frame %+v\n with flags %+v\n and payload: %+v\n", frames[head], frames[head].Flags, frames[head].Payload)
 			frameToWrite := frames.Front()
-			c.tlsConn.Write(frameToWrite.Value.(*frame.Frame).ToBytes())
+			if frameToWrite == nil {
+				return
+			}
+			frameValue := frameToWrite.Value
+			if frameValue == nil {
+				return
+			}
+		
+			c.tlsConn.Write(frameValue.(*frame.Frame).ToBytes())
 			frames.Remove(frameToWrite)
 		}
 	}

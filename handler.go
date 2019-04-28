@@ -19,7 +19,7 @@ import (
 // The purpose of this file is to handle streams.
 // By this it means building requests, responses, and push-promises,
 // and then putting it to the decoder's channel
-// This file will also do all the header compression and decompression
+// This file will also handle all the header compression and decompression (HPACK)
 
 type responseWrapper struct {
 	req		*http.Request
@@ -146,8 +146,10 @@ func sendResponse(conn *Conn, s *Stream, res *http.Response) {
 	// Encode headers
 	encodedHeaders := conn.hpack.Encode(hfs) // Header compression
 
+	// Store headers and data in stream
 	s.headers = encodedHeaders
 	s.data = res.Body
+	s.state = HalfClosedRemote
 
 	// Send stream to outChannel
 	conn.outChan <- s
@@ -209,7 +211,6 @@ func handleFile(res *http.Response, fh *router.FileHandler) {
 	} else {
 		res.Body = file // File found, return file
 		res.Header["content-type"] = fh.MimeType
-		res.Header["cache-control"] = "public"
 	}
 }
 

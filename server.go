@@ -10,6 +10,7 @@ import (
 	"context"
 )
 
+// Server represents a HTTP-server
 type Server struct {
 	cert          tls.Certificate
 	isTLS         bool

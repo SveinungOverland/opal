@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 // Request contains and manages all request-relevant data.
@@ -22,6 +23,31 @@ type Request struct {
 // JSON parses the request body as JSON into a target interface.
 func (r *Request) JSON(target interface{}) {
 	json.Unmarshal(r.Body, target)
+}
+
+// Query returns the value of a given query parameter
+func (r *Request) Query(name string) string {
+	name = name + "="
+
+	// Find start index
+	startIndex := strings.Index(r.RawQuery, "?"+name)
+	if startIndex == -1 {
+		startIndex = strings.Index(r.RawQuery, "&"+name)
+		if startIndex == -1 {
+			return ""
+		}
+	}
+	startIndex = startIndex + len(name) + 1
+
+	// Find end index
+	endIndex := strings.Index(r.RawQuery[startIndex:], "&")
+	if endIndex == -1 {
+		endIndex = len(r.RawQuery)
+	} else {
+		endIndex += startIndex
+	}
+
+	return r.RawQuery[startIndex:(endIndex)]
 }
 
 // ----- PRIVATE METHODS ------

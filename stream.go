@@ -71,7 +71,7 @@ func parsePseudoHeader(req *http.Request, headerName string, value string) {
 		uriValues := strings.SplitN(value, "?", 2)
 		req.URI = uriValues[0]
 		if len(uriValues) > 1 {
-			req.RawQuery = uriValues[1]
+			req.RawQuery = "?" + uriValues[1]
 		}
 	case ":scheme":
 		req.Scheme = value

@@ -16,8 +16,7 @@ type Request struct {
 	Header    map[string]string
 	Body      []byte
 
-	finished bool   // Bool for deciding if next request can be handled
-	Finish   func() // Changes the next-value to true
+	finished bool // Bool for deciding if next request can be handled
 }
 
 // JSON parses the request body as JSON into a target interface.
@@ -50,6 +49,11 @@ func (r *Request) Query(name string) string {
 	return r.RawQuery[startIndex:(endIndex)]
 }
 
+// Finish makes the request finished. Which means next handler in the function won't run.
+func (r *Request) Finish() {
+	r.finished = true
+}
+
 // ----- PRIVATE METHODS ------
 
 // IsFinished says if the request is finished or not
@@ -65,6 +69,5 @@ func NewRequest() *Request {
 		Header:   make(map[string]string),
 		Params:   make(map[string]string),
 	}
-	req.Finish = func() { req.finished = true }
 	return req
 }

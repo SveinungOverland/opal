@@ -9,7 +9,7 @@ import (
 type FileHandler struct {
 	relativePath string
 	filePath     string
-	MimeType	 string
+	MimeType     string
 }
 
 func newFileHandler(relativePath string, filePath string) *FileHandler {
@@ -24,8 +24,8 @@ func newFileHandler(relativePath string, filePath string) *FileHandler {
 		fs.filePath = strings.TrimRight(fs.filePath, "/") + "/index.html"
 		fs.MimeType = Mimes[".html"]
 	} else {
-		fileExtension := splitFilePath[len(splitFilePath) - 1]
-		fs.MimeType = Mimes["." + fileExtension]
+		fileExtension := splitFilePath[len(splitFilePath)-1]
+		fs.MimeType = Mimes["."+fileExtension]
 	}
 
 	return fs

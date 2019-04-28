@@ -1,15 +1,15 @@
 package opal
 
 import (
-	"testing"
-	"opal/router"
-	"opal/http"
-	"opal/hpack"
-	"opal/frame"
-	"opal/frame/types"
+	"context"
 	"crypto/tls"
 	"fmt"
-	"context"
+	"opal/frame"
+	"opal/frame/types"
+	"opal/hpack"
+	"opal/http"
+	"opal/router"
+	"testing"
 	"time"
 )
 
@@ -49,10 +49,10 @@ func TestStreamHandlerIntegration(t *testing.T) {
 
 	for recStreamCount < 3 {
 		select {
-		case <- testCxt.Done(): // Timeout check
+		case <-testCxt.Done(): // Timeout check
 			t.Error("Not all streams was recieved!")
 			break
-		case stream := <- conn.outChan:
+		case stream := <-conn.outChan:
 			recStreamCount++
 			headers, err := hpackCtx.Decode(stream.headers)
 			if err != nil {
@@ -110,7 +110,7 @@ func TestSendResponse(t *testing.T) {
 	// Send response
 	stream := newTestStream(1, []byte{}, []byte{})
 	sendResponse(conn, stream, res)
-	outStream := <- conn.outChan
+	outStream := <-conn.outChan
 
 	// Check stream id
 	if outStream.id != 1 {
@@ -150,7 +150,7 @@ func TestNewPushPromise(t *testing.T) {
 		t.Errorf("PushPromise frame has invalid id! Expected %d, got %d", stream.id, pushPromise.ID)
 	}
 	// Check if promised stream identifier
-	payload, ok := pushPromise.Payload.(types.PushPromisePayload);
+	payload, ok := pushPromise.Payload.(types.PushPromisePayload)
 	if !ok {
 		t.Error("PushPromiseFrame does not include a PushPromisePayload!")
 	}
@@ -165,7 +165,7 @@ func TestNewPushPromise(t *testing.T) {
 
 // ---------- HELPERS --------------
 
-func newTestServer() (*Server) {
+func newTestServer() *Server {
 	return &Server{
 		cert:          tls.Certificate{},
 		isTLS:         true,
@@ -181,7 +181,7 @@ func newTestConn() *Conn {
 	return conn
 }
 
-func newTestRouter() (*router.Router) {
+func newTestRouter() *router.Router {
 	r := router.NewRouter("/")
 
 	r.Get("/", func(req *http.Request, res *http.Response) {
@@ -193,7 +193,7 @@ func newTestRouter() (*router.Router) {
 			Result string
 		}
 		result.Result = string(req.Body) + "_RESULT"
-		
+
 		res.JSON(result)
 	})
 
@@ -209,18 +209,18 @@ func newEncodedTestHeaders(hpackCtx *hpack.Context, path, method string) []byte 
 	return hpackCtx.Encode(hfs)
 }
 
-func newTestStream(id uint32, header, data []byte) (*Stream) {
-	return &Stream {
-		id: id,
-		state: Open,
+func newTestStream(id uint32, header, data []byte) *Stream {
+	return &Stream{
+		id:      id,
+		state:   Open,
 		headers: header,
-		data: data,
+		data:    data,
 	}
 }
 
 func validateHeaders(t *testing.T, s *Stream, actual []*hpack.HeaderField, expectedHeaders []*hpack.HeaderField) {
 	// Store actual headers in map so the order does not have any effect
-	actualHeaders := map[string]string {}
+	actualHeaders := map[string]string{}
 	for _, hf := range actual {
 		actualHeaders[hf.Name] = hf.Value
 	}

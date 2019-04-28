@@ -1,9 +1,9 @@
 package http
 
 import (
-	"testing"
 	"encoding/json"
 	"github.com/go-test/deep"
+	"testing"
 )
 
 func TestResponseStatus(t *testing.T) {
@@ -25,7 +25,7 @@ func TestResponseStatus(t *testing.T) {
 
 func TestResponseJSON(t *testing.T) {
 	res := NewResponse(nil)
-	
+
 	// Initialize data
 	var result struct {
 		A int
@@ -36,7 +36,7 @@ func TestResponseJSON(t *testing.T) {
 	result.B = "TEST"
 	result.C = false
 	expected, _ := json.Marshal(&result)
-	
+
 	// Parse JSON
 	res.JSON(&result)
 
@@ -45,7 +45,6 @@ func TestResponseJSON(t *testing.T) {
 		t.Error(diff)
 	}
 }
-
 
 // -------- HELPERS ----------
 func checkResStatus(t *testing.T, res *Response, expected uint16) {

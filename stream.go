@@ -22,11 +22,11 @@ const (
 type Stream struct {
 	id               uint32
 	streamDependency uint32
-	priorityWeight 	byte
-	lastFrame *frame.Frame
-	state     StreamState
-	headers   []byte
-	data      []byte
+	priorityWeight   byte
+	lastFrame        *frame.Frame
+	state            StreamState
+	headers          []byte
+	data             []byte
 }
 
 // toRequest builds and returns a Request based on recieved headers and data frames

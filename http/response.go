@@ -1,11 +1,11 @@
 package http
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"html/template"
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"html/template"
+	"io/ioutil"
 )
 
 // Response represents a http-response
@@ -14,15 +14,14 @@ type Response struct {
 	Body   []byte
 	Header map[string]string
 
-
 	// RFC 7540 - Section 8.2 - Server Push
-	req *Request // Requests corresponding to the Response. Is used for Server Push
+	req         *Request     // Requests corresponding to the Response. Is used for Server Push
 	pushService *pushService // A pushService, storing all the push requests from Response.Push(path string)
 }
 
 // ----- BODY MODIFIERS -----
 
-// JSON sets body to the given content in json-format 
+// JSON sets body to the given content in json-format
 func (res *Response) JSON(target interface{}) {
 	res.Header["content-type"] = "application/json"
 	json, _ := json.Marshal(target)
@@ -89,7 +88,6 @@ func (res *Response) NotFound() {
 	res.Status = 404
 }
 
-
 // ------ SERVER PUSH ---------
 
 // Push performs a push server
@@ -118,7 +116,7 @@ func NewResponse(req *Request) *Response {
 		Status: 200,
 		Body:   make([]byte, 0),
 		Header: make(map[string]string),
-		req: req,
+		req:    req,
 	}
 	res.Header["content-type"] = "text/plain; charset=utf-8"
 	return res

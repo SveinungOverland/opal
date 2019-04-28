@@ -3,11 +3,11 @@ package opal
 import (
 	"fmt"
 	"opal/errors"
-	"opal/http"
-	"opal/router"
 	"opal/frame"
 	"opal/frame/types"
 	"opal/hpack"
+	"opal/http"
+	"opal/router"
 	"strconv"
 	"strings"
 	"sync"
@@ -15,16 +15,15 @@ import (
 	"github.com/fatih/color"
 )
 
-
 // The purpose of this file is to handle streams.
 // By this it means building requests, responses, and push-promises,
 // and then putting it to the decoder's channel
 // This file will also handle all the header compression and decompression (HPACK)
 
 type responseWrapper struct {
-	req		*http.Request
-	res 	*http.Response
-	s 		*Stream
+	req *http.Request
+	res *http.Response
+	s   *Stream
 }
 
 // ServeStreamHandler handles incoming streams, build and sends responses, and handles push reqests
@@ -39,11 +38,11 @@ func serveStreamHandler(conn *Conn) {
 	for {
 		select {
 		// Check if connection is done, if so, return
-		case <- conn.ctx.Done():
+		case <-conn.ctx.Done():
 			return
 
 		// Check for and handle incoming stream
-		case s := <- conn.inChan:
+		case s := <-conn.inChan:
 			if s == nil {
 				return
 			}
@@ -53,19 +52,17 @@ func serveStreamHandler(conn *Conn) {
 				conn.outChanFrame <- frame.NewErrorFrame(s.id, errors.CompressionError)
 				continue
 			}
-			
+
 			go handleRequest(conn, reqDoneChan, req, s) // Serve and build response
 
-
 		// Check for and handle incoming responses
-		case resWrp := <- reqDoneChan:
+		case resWrp := <-reqDoneChan:
 			// Initialize server push requests
 			pushRequests := resWrp.res.PushRequests()
 			var pushResponses []*responseWrapper
 			if serverPushEnabled {
 				pushResponses = sendPushRequest(conn, pushRequests, resWrp.s)
 			}
-			
 
 			// Send original response
 			sendResponse(conn, resWrp.s, resWrp.res)
@@ -100,8 +97,8 @@ func handleRequest(conn *Conn, reqDoneChan chan responseWrapper, req *http.Reque
 	go printResponse(req, res)
 }
 
-// ServeRequest handles an incoming request. Runs all endpoint-methods 
-func serveRequest(conn *Conn, req *http.Request) *http.Response{
+// ServeRequest handles an incoming request. Runs all endpoint-methods
+func serveRequest(conn *Conn, req *http.Request) *http.Response {
 	// Build response
 	res := http.NewResponse(req)
 
@@ -124,7 +121,7 @@ func serveRequest(conn *Conn, req *http.Request) *http.Response{
 
 	// Set Content-Length if body is provided
 	contentLength := len(res.Body)
-	if (contentLength > 0) {
+	if contentLength > 0 {
 		res.Header["content-length"] = strconv.Itoa(contentLength)
 	}
 	return res
@@ -142,7 +139,6 @@ func sendResponse(conn *Conn, s *Stream, res *http.Response) {
 		hfs = append(hfs, &hpack.HeaderField{Name: strings.ToLower(k), Value: v})
 	}
 
-
 	// Encode headers
 	encodedHeaders := conn.hpack.Encode(hfs) // Header compression
 
@@ -159,7 +155,7 @@ func sendResponse(conn *Conn, s *Stream, res *http.Response) {
 
 // SendPushRequest serves a list of requests, builds corresponding responses, and sends new push_promise frames.
 // Returns an array containing the responses and created streams.
-func sendPushRequest(conn *Conn, reqs []*http.Request, s *Stream) ([]*responseWrapper) {
+func sendPushRequest(conn *Conn, reqs []*http.Request, s *Stream) []*responseWrapper {
 	pushResponses := make([]*responseWrapper, 0)
 
 	// For all push requests
@@ -169,13 +165,13 @@ func sendPushRequest(conn *Conn, reqs []*http.Request, s *Stream) ([]*responseWr
 
 		// Build PUSH_PROMISE frame
 		pushPromiseFrame := newPushPromise(conn, pshReq, s)
-		
+
 		// Send PUSH_PROMISE frame
 		conn.outChanFrame <- pushPromiseFrame
 
 		// Create new stream for request
 		stream := &Stream{
-			id: pushPromiseFrame.Payload.(types.PushPromisePayload).StreamID,
+			id:    pushPromiseFrame.Payload.(types.PushPromisePayload).StreamID,
 			state: ReservedLocal,
 		}
 		conn.SetStream(stream) // Register stream at conn
@@ -235,16 +231,16 @@ func newPushPromise(conn *Conn, req *http.Request, s *Stream) *frame.Frame {
 	// RFC7540 - Section 5.1.1 states that new stream ids from the server must be even
 	conn.prevStreamID = conn.prevStreamID + 2 // prevStreamID starts at zero, so it is always even
 
-	pushFrame := &frame.Frame {
-		ID: s.id,
+	pushFrame := &frame.Frame{
+		ID:   s.id,
 		Type: frame.PushPromiseType,
-		Flags: types.PushPromiseFlags {
+		Flags: types.PushPromiseFlags{
 			EndHeaders: true,
-			Padded: false,
+			Padded:     false,
 		},
-		Payload: types.PushPromisePayload {
-			StreamID: conn.prevStreamID,
-			Fragment: encodedHeaders,
+		Payload: types.PushPromisePayload{
+			StreamID:  conn.prevStreamID,
+			Fragment:  encodedHeaders,
 			PadLength: 0,
 		},
 		Length: payloadLength + 4,
@@ -259,11 +255,11 @@ func initReqHFs(req *http.Request) []*hpack.HeaderField {
 	hfs = append(hfs, &hpack.HeaderField{Name: ":method", Value: req.Method})
 	hfs = append(hfs, &hpack.HeaderField{Name: ":path", Value: req.URI})
 	hfs = append(hfs, &hpack.HeaderField{Name: ":authority", Value: req.Authority})
-	
+
 	if req.Scheme != "" {
 		hfs = append(hfs, &hpack.HeaderField{Name: ":scheme", Value: req.Scheme})
 	}
-	
+
 	for k, v := range req.Header {
 		hfs = append(hfs, &hpack.HeaderField{Name: strings.ToLower(k), Value: v})
 	}

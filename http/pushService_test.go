@@ -29,5 +29,5 @@ func TestPush(t *testing.T) {
 			t.Errorf("Invalid authority in push request. Expected %s, got %s", authority, req.Authority)
 		}
 	}
-	
+
 }

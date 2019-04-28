@@ -15,8 +15,8 @@ type Request struct {
 	Header    map[string]string
 	Body      []byte
 
-	finished   bool   // Bool for deciding if next request can be handled
-	Finish func() // Changes the next-value to true
+	finished bool   // Bool for deciding if next request can be handled
+	Finish   func() // Changes the next-value to true
 }
 
 // JSON parses the request body as JSON into a target interface.
@@ -26,7 +26,7 @@ func (r *Request) JSON(target interface{}) {
 
 // ----- PRIVATE METHODS ------
 
-// IsFinished says if the request is finished or not 
+// IsFinished says if the request is finished or not
 func (r *Request) IsFinished() bool {
 	return r.finished
 }
@@ -34,10 +34,10 @@ func (r *Request) IsFinished() bool {
 // NewRequest builds a new request with initialized fields
 func NewRequest() *Request {
 	req := &Request{
-		finished:   false,
-		Body:   make([]byte, 0),
-		Header: make(map[string]string),
-		Params: make(map[string]string),
+		finished: false,
+		Body:     make([]byte, 0),
+		Header:   make(map[string]string),
+		Params:   make(map[string]string),
 	}
 	req.Finish = func() { req.finished = true }
 	return req

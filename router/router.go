@@ -23,32 +23,39 @@ func NewRouter(basePath string) *Router {
 
 // ------ ROUTE BUILDERS --------
 
+// Get initializes a GET-endpoint at given path.
 func (r *Router) Get(path string, funcs ...HandleFunc) {
 	createFullRoute(r.root, path, "GET", funcs)
 }
 
+// Post initializes a POST-endpoint at given path.
 func (r *Router) Post(path string, funcs ...HandleFunc) {
 	createFullRoute(r.root, path, "POST", funcs)
 }
 
+// Put initializes a PUT-endpoint at given path.
 func (r *Router) Put(path string, funcs ...HandleFunc) {
 	createFullRoute(r.root, path, "PUT", funcs)
 }
 
+// Delete initializes a DELETE-endpoint at given path.
 func (r *Router) Delete(path string, funcs ...HandleFunc) {
 	createFullRoute(r.root, path, "DELETE", funcs)
 }
 
+// Patch initializes a PATCH-endpoint at given path.
 func (r *Router) Patch(path string, funcs ...HandleFunc) {
 	createFullRoute(r.root, path, "PATCH", funcs)
 }
 
+// Static initializes a static route for handling searches for static files.
 func (r *Router) Static(path string, relativePath string) {
 	leafRoute, _ := createOrFindRoute(r.root, path)
 	leafRoute.static = true
 	leafRoute.staticPath = relativePath
 }
 
+// Root returns the root of the router.
 func (r *Router) Root() *Route {
 	return r.root
 }

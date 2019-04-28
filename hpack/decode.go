@@ -131,7 +131,7 @@ func (d *Decoder) parseIndexedField() error {
 
 	hf, ok := d.getHeaderFieldByIndex(idx)
 	if !ok {
-		return decodingError{errors.New(fmt.Sprintf("Invalid index: %d", idx))}
+		return decodingError{fmt.Errorf("Invalid index: %d", idx)}
 	}
 
 	d.buf = buf
@@ -155,7 +155,7 @@ func (d *Decoder) parseLiteralString(n byte, hfRepr headerFieldRepr) error {
 	if idx > 0 {
 		hf2, ok := d.getHeaderFieldByIndex(uint32(idx))
 		if !ok {
-			return decodingError{errors.New(fmt.Sprintf("Invalid index: %d", idx))}
+			return decodingError{fmt.Errorf("Invalid index: %d", idx)}
 		}
 		hf.Name = hf2.Name
 	} else {

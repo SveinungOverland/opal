@@ -31,8 +31,10 @@ func TestStaticSearch(t *testing.T) {
 	r := getSearchTestRouter("/")
 	r.Static("/", "./testPath")
 
+	// Test static route from root
 	testStaticPath(t, r.Root(), "/myTestFile.txt", "./testPath/myTestFile.txt", "text/plain")
 
+	// Test static route from path not equal to root
 	r = NewRouter("/")
 	r.Static("/staticPath", "./")
 	testStaticPath(t, r.Root(), "/staticPath/styles.css", "./styles.css", "text/css")

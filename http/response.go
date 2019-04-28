@@ -8,6 +8,7 @@ import (
 	"fmt"
 )
 
+// Response represents a http-response
 type Response struct {
 	Status uint16
 	Body   []byte

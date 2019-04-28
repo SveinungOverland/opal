@@ -1,5 +1,6 @@
 package router
 
+// Mimes is a map including all the http content-types of different files. MimeTypes ^^
 var Mimes = map[string]string {
 	".323":"text/h323",
 	".3g2":"video/3gpp2",

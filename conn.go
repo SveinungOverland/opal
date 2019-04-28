@@ -8,6 +8,7 @@ import (
 
 	"opal/frame"
 	"opal/frame/types"
+	"opal/errors"
 
 	"context"
 )
@@ -21,13 +22,14 @@ type Conn struct {
 	conn          net.Conn
 	tlsConn       *tls.Conn
 	hpack         *hpack.Context
+	lastReceivedFrame *frame.Frame
 	windowSize    uint32
 	isTLS         bool
 	maxConcurrent uint32
 	streams       map[uint32]*Stream // map streamId to Stream instance
 	inChan		  chan *Stream // Channel for handling new ended stream
 	outChan       chan *Stream // Channel for sending finished streams
-	outChanFrame  chan *frame.Frame // Channel for sending single Frame's not associated with a stream
+	outChanFrame  chan *frame.Frame // Channel for sending single Frame's
 	settings      map[uint16]uint32
 	prevStreamID  uint32 // The previous created stream's identifer.
 }
@@ -105,8 +107,18 @@ func (c *Conn) serve() {
 		case frame.DataType:
 			// Data should always be associated with a stream
 			stream, ok := c.streams[newFrame.ID]
-			if !ok {
-				// Error, data frame is not associated with a stream
+			if stream.id == 0 {
+				goaway := &frame.Frame{
+					ID: 0,
+					Type: frame.GoAwayType,
+					Flags: &types.GoAwayFlags{},
+					Payload: &types.GoAwayPayload{
+						LastStreamID: c.lastReceivedFrame.ID,
+						ErrorCode: errors.ProtocolError,
+					},
+					Length: 8,
+				}
+				c.outChanFrame <- goaway
 				continue
 			}
 			if newFrame.Flags.(*types.DataFlags).EndStream {
@@ -203,7 +215,7 @@ func (c *Conn) serve() {
 			}
 			stream.headers = append(stream.headers, newFrame.Payload.(*types.ContinuationPayload).HeaderFragment...)
 		}
-
+		c.lastReceivedFrame = newFrame
 	}
 
 	// windowUpdateFrame := frame.ReadFrame(c.tlsConn)

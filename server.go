@@ -56,7 +56,6 @@ func (s *Server) Listen(port int16) error {
 		}
 
 		c := s.createConn(conn)
-		fmt.Printf("New connection established: %s\n", conn.RemoteAddr().String())
 		go c.serve()
 	}
 }
@@ -102,6 +101,7 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 	return c
 }
 
+// NonBlockingErrorChanSend sends incoming error to the user-provided error-channel
 func (s *Server) NonBlockingErrorChanSend(err error) {
 	if s.connErrorChan != nil {
 		select {

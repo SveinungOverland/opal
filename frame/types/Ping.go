@@ -20,11 +20,11 @@ type PingPayload struct {
 }
 
 func (p *PingPayload) ReadPayload(payload []byte, length uint32, flags IFlags) {
-	p.Data = payload[:8]
+	p.Data = payload
 }
 
 func (p PingPayload) Bytes(flags IFlags) []byte {
-	return p.Data[:]
+	return p.Data
 }
 
 type Ping struct {

@@ -21,7 +21,7 @@ func main() {
 		time.Sleep(30 * time.Second)
 	}()
 
-	srv, err := opal.NewTLSServer("../server.crt", "../server.key", nil)
+	srv, err := opal.NewTLSServer("../server.crt", "../server.key")
 	if err != nil {
 		log.Fatal(err)
 	}

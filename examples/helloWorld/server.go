@@ -11,7 +11,7 @@ import (
 
 func main() {
 	// opal.NewTLSServer takes a third argument which is a error channel for connection errors, useful for debugging
-	srv, err := opal.NewTLSServer("../server.crt", "../server.key", nil)
+	srv, err := opal.NewTLSServer("../server.crt", "../server.key")
 	if err != nil {
 		panic(err)
 	}

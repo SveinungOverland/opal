@@ -3,20 +3,44 @@
 # Opal - A HTTP2 Webframework in Go 
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/SveinungOverland/Opal)](https://goreportcard.com/report/github.com/SveinungOverland/Opal)
-[![Build Status](https://travis-ci.com/SveinungOverland/Opal.svg?token=qzzDg7qxp9Cyq4d1SzcF&branch=master)](https://travis-ci.com/SveinungOverland/Opal)
+[![Build Status](https://travis-ci.com/SveinungOverland/opal.svg?token=qzzDg7qxp9Cyq4d1SzcF&branch=master)](https://travis-ci.com/SveinungOverland/opal)
 
 Opal is a simple HTTP2 web-framework implemented in Go (Golang), made for fast and reliable development. Opal is a powerful package for quickly writing modular web applications/services in Go.
 
 ## Content
-[Installation](#Installation)
-[Documentation](#Documentation)
-[Examples](#Examples)
-[Functionality](#Functionality)
-[Todo](#Todo)
-[Dependencies](#Dependencies)
-[Tests](#Tests)
+1. [Installation](#installation)
+2. [Documentation](#documentation)
+3. [Examples](#examples)
+4. [Functionality](#functionality)
+5. [Todo](#todo)
+6. [Dependencies](#dependencies)
+7. [Tests](#tests)
+7. [Authors](#authors)
 
 ## Installation
+To install Opal just install from the Github repo.
+```
+go get github.com/SveinungOverland/opal
+```
+## Documentation
+GENERATE DOCS MAYBE?
+## Examples
+### Basic Usage
+```go
+srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
+r := router.NewRouter("/")
+
+r.Get("/", func(req *http.Request, res *http.Response) {
+  res.String(200, "Hello World! :D")
+})
+```
+## Functionality
+
+## Todo
+
+## Dependencies
+
+## Tests
 
 ## Authors
 <a href="https://github.com/Andorr" target="_blank"><img src="https://avatars2.githubusercontent.com/u/31648998?s=400&v=4" width=40 title="Andorr"/></a>

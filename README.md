@@ -1,4 +1,4 @@
-![Opal_Maskot](https://user-images.githubusercontent.com/31648998/56459646-a53d1a00-6396-11e9-8b5a-7715a2796813.png)
+![Opal Maskot](https://user-images.githubusercontent.com/31648998/56930012-a62f2380-6adb-11e9-9c69-a49eaab1c4b8.png)
 
 # Opal - A HTTP2 Webframework in Go 
 

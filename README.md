@@ -11,7 +11,7 @@ Opal is a simple HTTP2 web-framework implemented in Go (Golang), made for fast a
 1. [Installation](#installation)
 2. [Documentation](#documentation)
 3. [Examples](#examples)
-4. [Functionality](#functionality)
+4. [Implementations](#implementations)
 5. [Todo](#todo)
 6. [Dependencies](#dependencies)
 7. [Tests](#tests)
@@ -35,6 +35,7 @@ r.Get("/", func(req *http.Request, res *http.Response) {
   res.String(200, "Hello World! :D")
 })
 
+// A simple PUT-endpoint
 r.Put("/:id", func(req *http.Request, res *http.Response) {
   id := req.Param("id") // Read path parameter
   res.String(200, id)
@@ -103,7 +104,9 @@ srv.Register(r)
 srv.Listen(443)
 ```
 
-## Functionality
+## Implementations
+### Core of the HTTP/2 Protocol
+Implemented most of the HTTP2-protocol, specified by [RFC7540](https://tools.ietf.org/html/rfc7540)
 
 ## Todo
 

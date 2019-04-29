@@ -137,6 +137,15 @@ A high preformance HTTP-Router with parameter- and filehandling-functionality.
 
 
 ## Tests
+For running the test the following command can be executed at the root directory.
+```
+go test -v ./...
+```
+For seeing test-coverage the following commands can be exectuted:
+```
+go test -v ./... -coverageprofile=coverage.out
+go tool cover -html=coverage.out
+```
 
 ## Authors
 <a href="https://github.com/Andorr" target="_blank"><img src="https://avatars2.githubusercontent.com/u/31648998?s=400&v=4" width=40 title="Andorr"/></a>

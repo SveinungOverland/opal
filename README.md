@@ -57,6 +57,24 @@ r.Static("/static", "./MY_STATIC_PATH")
 srv.Register(r)
 srv.Listen(443)
 ```
+### Middlewares
+```go
+// Authorization middleware
+func auth(req *http.Request, res *http.Response) {
+  token := req.Query("token")
+  if token != "MY_SECRET_PASSWORD" {
+    req.Finish() // Stops rests of the endpoint flow
+    req.Unauthorized()
+  }
+}
+
+srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
+r := router.NewRouter("/")
+
+r.Post("/", auth, func(req *http.Request, res *http.Response) {
+  
+}
+```
 
 ## Functionality
 

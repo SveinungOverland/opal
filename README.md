@@ -79,12 +79,12 @@ r := router.NewRouter("/")
 // This endpoint is protected
 r.Post("/todo", auth, func(req *http.Request, res *http.Response) {
   task := string(req.Body)
-  // Create new todo-item
-  todo := http.JSON {
+  
+  // Send new todo item
+  res.JSON(201, http.JSON {
    "todo": task,
    "done": false,
-  }
-  res.JSON(201, todo)
+  })
 }
 
 srv.Register(r)

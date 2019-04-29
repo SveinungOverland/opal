@@ -105,6 +105,8 @@ srv.Listen(443)
 ```
 
 ## Implementations
+Implemented a robust HTTP2-library managing multiple clients with REST-functionality and support for serving static files.
+
 ### Core of the HTTP/2 Protocol
 Implemented most of the HTTP2-protocol, specified by [RFC7540](https://tools.ietf.org/html/rfc7540)
  * HTTP/2 Connection Preface, [RFC7540 Section 3.5](https://tools.ietf.org/html/rfc7540#section-3.5)
@@ -112,6 +114,7 @@ Implemented most of the HTTP2-protocol, specified by [RFC7540](https://tools.iet
  * Stream multiplexing, [RFC7540 Section 5](https://tools.ietf.org/html/rfc7540#section-5)
     - Stream states, [RFC7540 Section 5.1](https://tools.ietf.org/html/rfc7540#section-5.1)
     - Flow control, [RFC7540 Section 5.2](https://tools.ietf.org/html/rfc7540#section-5.2)
+    - Concurrency
  * Frame management, [RFC7540 Section 4](https://tools.ietf.org/html/rfc7540#section-4)
  * Server Push, [RFC7540 Section 8.2](https://tools.ietf.org/html/rfc7540#section-8.2)
  
@@ -121,9 +124,10 @@ Created a robust and solid HPACK library, [RFC7541](https://tools.ietf.org/html/
 ### HTTP Router library
 A high preformance HTTP-Router with parameter- and filehandling-functionality.
 
-### 
-
 ## Todo
+* Implement HTTP1-functionality ( Had no time :( )
+* Implement Stream Priority, [RFC7540 Section 5.3](https://tools.ietf.org/html/rfc7540#section-5.3)
+
 
 ## Dependencies
 

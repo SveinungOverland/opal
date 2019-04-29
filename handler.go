@@ -187,7 +187,7 @@ func handleRoute(middlewares []router.HandleFunc, handlers []router.HandleFunc, 
 	// Run all middlewares
 	for _, middleware := range middlewares {
 		if req.IsFinished() {
-			break
+			return
 		}
 		middleware(req, res)
 	}

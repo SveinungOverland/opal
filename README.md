@@ -67,6 +67,7 @@ srv.Listen(443)
 // Authorization middleware
 auth := func(req *http.Request, res *http.Response) {
   token := req.Query("token")
+  
   if token != "MY_SECRET_PASSWORD" {
     res.Unauthorized()
     req.Finish() // Stops rests of the endpoint flow

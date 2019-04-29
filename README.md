@@ -68,8 +68,8 @@ srv.Listen(443)
 func auth(req *http.Request, res *http.Response) {
   token := req.Query("token")
   if token != "MY_SECRET_PASSWORD" {
-    req.Finish() // Stops rests of the endpoint flow
     res.Unauthorized()
+    req.Finish() // Stops rests of the endpoint flow
   }
 }
 

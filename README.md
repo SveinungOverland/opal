@@ -75,6 +75,8 @@ auth := func(req *http.Request, res *http.Response) {
 }
 
 srv, err := opal.NewTLSServer("./server.crt", "./server.key")
+srv.Use(corsHandler) // Adding cors
+
 r := router.NewRouter("/")
 
 // This endpoint is protected

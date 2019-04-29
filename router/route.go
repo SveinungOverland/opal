@@ -46,15 +46,15 @@ func (r *Route) Search(path string) (match bool, route *Route, params map[string
 func (r *Route) addHandlers(method string, funcs []HandleFunc) {
 	switch method {
 	case "GET":
-		r.Get = append(r.Get, funcs...)
+		r.Get = funcs
 	case "POST":
-		r.Post = append(r.Post, funcs...)
+		r.Post = funcs
 	case "PUT":
-		r.Put = append(r.Put, funcs...)
+		r.Put = funcs
 	case "DELETE":
-		r.Delete = append(r.Delete, funcs...)
+		r.Delete = funcs
 	case "PATCH":
-		r.Patch = append(r.Patch, funcs...)
+		r.Patch = funcs
 	}
 }
 
@@ -73,18 +73,6 @@ func (r *Route) GetHandlers(method string) []HandleFunc {
 		return r.Patch
 	}
 	return nil
-}
-
-// AddHandlerToTree adds a handler to all methods
-func (r *Route) AddHandlerToTree(handler HandleFunc) {
-	r.Get = append(r.Get, handler)
-	r.Post = append(r.Post, handler)
-	r.Put = append(r.Put, handler)
-	r.Delete = append(r.Delete, handler)
-	r.Patch = append(r.Patch, handler)
-	for _, subRoute := range r.subRoutes {
-		subRoute.AddHandlerToTree(handler)
-	}
 }
 
 func (r *Route) merge(route *Route) {

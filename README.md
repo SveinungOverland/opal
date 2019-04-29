@@ -85,7 +85,7 @@ r.Post("/todo", auth, func(req *http.Request, res *http.Response) {
    "todo": task,
    "done": false,
   })
-}
+})
 
 srv.Register(r)
 srv.Listen(443)

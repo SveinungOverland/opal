@@ -30,13 +30,32 @@ GENERATE DOCS MAYBE?
 srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
 r := router.NewRouter("/")
 
+// A simple GET-endpoint
 r.Get("/", func(req *http.Request, res *http.Response) {
   res.String(200, "Hello World! :D")
 })
 
+srv.Register(r) // Register router
+srv.Listen(443)
+```
+
+### Server Push
+```go
+srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
+r := router.NewRouter("/")
+
+r.Get("/", func(req *http.Request, res *http.Response) {
+    res.HTML("./index.html", nil)
+    res.Push("/static/app.js")
+    res.Push("/static/index.css")
+})
+
+r.Static("/static", "./MY_STATIC_PATH")
+
 srv.Register(r)
 srv.Listen(443)
 ```
+
 ## Functionality
 
 ## Todo

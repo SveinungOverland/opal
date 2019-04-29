@@ -56,6 +56,7 @@ func (res *Response) HTML(path string, templateData interface{}) {
 	res.Header["content-type"] = "text/html; charset=utf-8"
 }
 
+// String sets a string as response body.
 func (res *Response) String(status uint16, s string) {
 	res.Status = status
 	res.Body = []byte(s)

@@ -33,6 +33,9 @@ r := router.NewRouter("/")
 r.Get("/", func(req *http.Request, res *http.Response) {
   res.String(200, "Hello World! :D")
 })
+
+srv.Register(r)
+srv.Listen(443)
 ```
 ## Functionality
 

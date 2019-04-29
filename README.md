@@ -107,7 +107,7 @@ srv.Listen(443)
 ## Implementations
 Implemented a robust HTTP2-library managing multiple clients with REST-support, Server-Push, and support for serving static files.
 
-### Core of the HTTP/2 Protocol
+#### Core of the HTTP/2 Protocol
 Implemented most of the HTTP2-protocol, specified by [RFC7540](https://tools.ietf.org/html/rfc7540)
  * HTTP/2 Connection Preface, [RFC7540 Section 3.5](https://tools.ietf.org/html/rfc7540#section-3.5)
  * TLS Support, [RFC7540 Section 3.3](https://tools.ietf.org/html/rfc7540#section-3.3)
@@ -118,18 +118,23 @@ Implemented most of the HTTP2-protocol, specified by [RFC7540](https://tools.iet
  * Frame management, [RFC7540 Section 4](https://tools.ietf.org/html/rfc7540#section-4)
  * Server Push, [RFC7540 Section 8.2](https://tools.ietf.org/html/rfc7540#section-8.2)
  
-### HPACK - Header compression
+#### HPACK - Header compression
 Created a robust and solid HPACK library, [RFC7541](https://tools.ietf.org/html/rfc7541)
 
-### HTTP Router library
+#### HTTP Router library
 A high preformance HTTP-Router with parameter- and filehandling-functionality.
 
 ## Todo
-* Implement HTTP1-functionality ( Had no time :( )
+* Add support for HTTP/1.1 ( Had no time :( )
 * Implement Stream Priority, [RFC7540 Section 5.3](https://tools.ietf.org/html/rfc7540#section-5.3)
 
 
 ## Dependencies
+
+* __crypto/tls__ - A TLS-library from the standard-library. [Docs](https://golang.org/pkg/crypto/tls/)
+* __github.com/go-test/deep__ - A library for test-support. [Github Repo](github.com/go-test/deep)
+* __github.com/fatih/color__ - A color-library for changing colors in the console. [Github Repo](github.com/fatih/color)
+
 
 ## Tests
 

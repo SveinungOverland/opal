@@ -46,15 +46,15 @@ func (r *Route) Search(path string) (match bool, route *Route, params map[string
 func (r *Route) addHandlers(method string, funcs []HandleFunc) {
 	switch method {
 	case "GET":
-		r.Get = funcs
+		r.Get = append(r.Get, funcs...)
 	case "POST":
-		r.Post = funcs
+		r.Post = append(r.Post, funcs...)
 	case "PUT":
-		r.Put = funcs
+		r.Put = append(r.Put, funcs...)
 	case "DELETE":
-		r.Delete = funcs
+		r.Delete = append(r.Delete, funcs...)
 	case "PATCH":
-		r.Patch = funcs
+		r.Patch = append(r.Patch, funcs...)
 	}
 }
 

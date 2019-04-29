@@ -187,9 +187,13 @@ func handleRoute(middlewares []router.HandleFunc, handlers []router.HandleFunc, 
 	// Run all middlewares
 	for _, middleware := range middlewares {
 		if req.IsFinished() {
-			return
+			break
 		}
 		middleware(req, res)
+	}
+
+	if req.IsFinished() {
+		return
 	}
 
 	// Check if any handlers are defined, if not 404

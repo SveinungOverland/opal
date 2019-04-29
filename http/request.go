@@ -5,6 +5,9 @@ import (
 	"strings"
 )
 
+// JSON is a short-cut for map[string]interface{}
+type JSON map[string]interface{}
+
 // Request contains and manages all request-relevant data.
 type Request struct {
 	Method    string

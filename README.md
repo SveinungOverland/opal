@@ -105,7 +105,7 @@ srv.Listen(443)
 ```
 
 ## Implementations
-Implemented a robust HTTP2-library managing multiple clients with REST-functionality and support for serving static files.
+Implemented a robust HTTP2-library managing multiple clients with REST-support, Server-Push, and support for serving static files.
 
 ### Core of the HTTP/2 Protocol
 Implemented most of the HTTP2-protocol, specified by [RFC7540](https://tools.ietf.org/html/rfc7540)

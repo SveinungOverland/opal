@@ -15,6 +15,7 @@ Opal is a simple HTTP2 web-framework implemented in Go (Golang), made for fast a
 5. [Todo](#todo)
 6. [Dependencies](#dependencies)
 7. [Tests](#tests)
+7. [Authors](#authors)
 
 ## Installation
 

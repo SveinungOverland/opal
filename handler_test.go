@@ -194,7 +194,7 @@ func newTestRouter() *router.Router {
 		}
 		result.Result = string(req.Body) + "_RESULT"
 
-		res.JSON(result)
+		res.JSON(200, result)
 	})
 
 	return r

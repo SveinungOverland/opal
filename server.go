@@ -59,6 +59,11 @@ func (s *Server) Listen(port int16) error {
 	}
 }
 
+// Use adds a handler globally to all routes
+func (s *Server) Use(handler router.HandleFunc) {
+	s.rootRoute.AddHandlerToTree(handler)
+}
+
 // Register registers a router to the server
 func (s *Server) Register(r *router.Router) {
 	s.rootRoute.AppendRouter(r)

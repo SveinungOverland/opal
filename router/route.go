@@ -75,6 +75,18 @@ func (r *Route) GetHandlers(method string) []HandleFunc {
 	return nil
 }
 
+// AddHandlerToTree adds a handler to all methods
+func (r *Route) AddHandlerToTree(handler HandleFunc) {
+	r.Get = append(r.Get, handler)
+	r.Post = append(r.Post, handler)
+	r.Put = append(r.Put, handler)
+	r.Delete = append(r.Delete, handler)
+	r.Patch = append(r.Patch, handler)
+	for _, subRoute := range r.subRoutes {
+		subRoute.AddHandlerToTree(handler)
+	}
+}
+
 func (r *Route) merge(route *Route) {
 	// Overwrite config
 	r.static = route.static

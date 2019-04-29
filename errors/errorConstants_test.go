@@ -3,6 +3,7 @@ package errors
 import (
 	"testing"
 )
+
 func TestNoError(t *testing.T) {
 	if NoError != 0 {
 		t.Fatal("NoError has wrong error code")

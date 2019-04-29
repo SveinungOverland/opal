@@ -65,7 +65,7 @@ srv.Listen(443)
 ### Middlewares
 ```go
 // Authorization middleware
-func auth(req *http.Request, res *http.Response) {
+auth := func(req *http.Request, res *http.Response) {
   token := req.Query("token")
   if token != "MY_SECRET_PASSWORD" {
     res.Unauthorized()

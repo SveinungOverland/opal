@@ -133,7 +133,7 @@ func (c *Conn) serve() {
 	c.outChanFrame <- settingsResponse
 
 	// Connection initiated and ready to receive header frames
-	// errors.EnhanceYourCalm
+	// constants.EnhanceYourCalm
 loop:
 	for {
 		select {

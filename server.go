@@ -19,17 +19,16 @@ type Server struct {
 }
 
 // NewTLSServer creates a new http2-server with a TLS configuration
-func NewTLSServer(certPath, privateKeyPath string, errorChannel *chan error) (*Server, error) {
+func NewTLSServer(certPath, privateKeyPath string) (*Server, error) {
 	cert, err := tls.LoadX509KeyPair(certPath, privateKeyPath)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Server{
-		cert:          cert,
-		isTLS:         true,
-		connErrorChan: errorChannel,
-		rootRoute:     router.NewRoot(),
+		cert:      cert,
+		isTLS:     true,
+		rootRoute: router.NewRoot(),
 	}, nil
 }
 
@@ -99,6 +98,11 @@ func (s *Server) createConn(conn net.Conn) *Conn {
 	}
 
 	return c
+}
+
+// SetErrorChan sets a errorChannel for retrieving internal errors from the server
+func (s *Server) SetErrorChan(errorChannel *chan error) {
+	s.connErrorChan = errorChannel
 }
 
 // NonBlockingErrorChanSend sends incoming error to the user-provided error-channel

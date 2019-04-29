@@ -1,4 +1,4 @@
-![Opal_Maskot](https://user-images.githubusercontent.com/31648998/56459646-a53d1a00-6396-11e9-8b5a-7715a2796813.png)
+![Opal Maskot](https://user-images.githubusercontent.com/31648998/56930012-a62f2380-6adb-11e9-9c69-a49eaab1c4b8.png)
 
 # Opal - A HTTP2 Webframework in Go 
 
@@ -9,21 +9,20 @@ Opal is a simple HTTP2 web-framework implemented in Go (Golang), made for fast a
 
 ## Content
 1. [Installation](#installation)
-2. [Documentation](#documentation)
-3. [Examples](#examples)
-4. [Implementations](#implementations)
-5. [Todo](#todo)
-6. [Dependencies](#dependencies)
-7. [Tests](#tests)
-7. [Authors](#authors)
+2. [Examples](#examples)
+3. [Implementations](#implementations)
+4. [Todo](#todo)
+5. [Dependencies](#dependencies)
+6. [Tests](#tests)
+7. [Documentation](#documentation)
+8. [Authors](#authors)
 
 ## Installation
 To install Opal just install from the Github repo.
 ```
 go get github.com/SveinungOverland/opal
 ```
-## Documentation
-GENERATE DOCS MAYBE?
+
 ## Examples
 ### Basic Usage
 ```go
@@ -105,29 +104,60 @@ srv.Listen(443)
 ```
 
 ## Implementations
-### Core of the HTTP/2 Protocol
+Implemented a robust HTTP2-library managing multiple clients with REST-support, Server-Push, and support for serving static files.
+
+#### Core of the HTTP/2 Protocol
 Implemented most of the HTTP2-protocol, specified by [RFC7540](https://tools.ietf.org/html/rfc7540)
  * HTTP/2 Connection Preface, [RFC7540 Section 3.5](https://tools.ietf.org/html/rfc7540#section-3.5)
  * TLS Support, [RFC7540 Section 3.3](https://tools.ietf.org/html/rfc7540#section-3.3)
  * Stream multiplexing, [RFC7540 Section 5](https://tools.ietf.org/html/rfc7540#section-5)
     - Stream states, [RFC7540 Section 5.1](https://tools.ietf.org/html/rfc7540#section-5.1)
     - Flow control, [RFC7540 Section 5.2](https://tools.ietf.org/html/rfc7540#section-5.2)
+    - Concurrency
  * Frame management, [RFC7540 Section 4](https://tools.ietf.org/html/rfc7540#section-4)
  * Server Push, [RFC7540 Section 8.2](https://tools.ietf.org/html/rfc7540#section-8.2)
  
-### HPACK - Header compression
+#### HPACK - Header compression
 Created a robust and solid HPACK library, [RFC7541](https://tools.ietf.org/html/rfc7541)
 
-### HTTP Router library
+#### HTTP Router library
 A high preformance HTTP-Router with parameter- and filehandling-functionality.
 
-### 
-
 ## Todo
+* Add support for HTTP/1.1 ( Had no time :( )
+* Implement Stream Priority, [RFC7540 Section 5.3](https://tools.ietf.org/html/rfc7540#section-5.3)
+
 
 ## Dependencies
 
+* __crypto/tls__ - A TLS-library from the standard-library. [Docs](https://golang.org/pkg/crypto/tls/)
+* __github.com/go-test/deep__ - A library for test-support. [Github Repo](github.com/go-test/deep)
+* __github.com/fatih/color__ - A color-library for changing colors in the console. [Github Repo](github.com/fatih/color)
+
+
 ## Tests
+For running the test the following command can be executed at the root directory.
+```
+go test -v ./...
+```
+For seeing test-coverage the following commands can be exectuted:
+```
+go test -v ./... -coverageprofile=coverage.out
+go tool cover -html=coverage.out
+```
+
+## Documentation
+GoDoc is generated and hosted at [godoc.org](https://godoc.org/github.com/SveinungOverland/opal)
+At the bottom of the page there is also docs for the subpackages (like __http__ and __hpack__)
+
+#### HTTP Docs (Request and Response)
+GoDoc: [https://godoc.org/github.com/SveinungOverland/opal/http](https://godoc.org/github.com/SveinungOverland/opal/http)
+
+#### Router Docs (Get, Post, Put...)
+GoDoc: [https://godoc.org/github.com/SveinungOverland/opal/router](https://godoc.org/github.com/SveinungOverland/opal/router)
+
+#### HPACK Docs
+GoDoc: [https://godoc.org/github.com/SveinungOverland/opal/hpack](https://godoc.org/github.com/SveinungOverland/opal/hpack)
 
 ## Authors
 <a href="https://github.com/Andorr" target="_blank"><img src="https://avatars2.githubusercontent.com/u/31648998?s=400&v=4" width=40 title="Andorr"/></a>

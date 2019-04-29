@@ -97,7 +97,7 @@ func (c *Conn) serve() {
 
 	settingsFrame, err := frame.ReadFrame(c.tlsConn)
 	if err != nil {
-		c.server.NonBlockingErrorChanSend(err)
+		c.server.nonBlockingErrorChanSend(err)
 	}
 
 	if settingsFrame.Type != frame.SettingsType {
@@ -144,7 +144,7 @@ loop:
 
 		newFrame, err := frame.ReadFrame(c.tlsConn)
 		if err != nil {
-			c.server.NonBlockingErrorChanSend(err)
+			c.server.nonBlockingErrorChanSend(err)
 			break loop
 		}
 
@@ -296,7 +296,7 @@ loop:
 				continue loop
 			}
 			if newFrame.Payload.(*types.GoAwayPayload).ErrorCode != constants.NoError {
-				c.server.NonBlockingErrorChanSend(error.New(fmt.Sprint(newFrame.Payload.(*types.GoAwayPayload).ErrorCode)))
+				c.server.nonBlockingErrorChanSend(error.New(fmt.Sprint(newFrame.Payload.(*types.GoAwayPayload).ErrorCode)))
 				break loop
 			} else {
 				c.cancel()

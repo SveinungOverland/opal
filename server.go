@@ -50,7 +50,7 @@ func (s *Server) Listen(port int16) error {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			s.NonBlockingErrorChanSend(err)
+			s.nonBlockingErrorChanSend(err)
 			continue
 		}
 
@@ -106,7 +106,7 @@ func (s *Server) SetErrorChan(errorChannel *chan error) {
 }
 
 // NonBlockingErrorChanSend sends incoming error to the user-provided error-channel
-func (s *Server) NonBlockingErrorChanSend(err error) {
+func (s *Server) nonBlockingErrorChanSend(err error) {
 	if s.connErrorChan != nil {
 		select {
 		case *s.connErrorChan <- err:

@@ -38,7 +38,7 @@ func TestResponseJSON(t *testing.T) {
 	expected, _ := json.Marshal(&result)
 
 	// Parse JSON
-	res.JSON(&result)
+	res.JSON(200, &result)
 
 	// Validate
 	if diff := deep.Equal(expected, res.Body); diff != nil {

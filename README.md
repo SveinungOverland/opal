@@ -11,7 +11,7 @@ Opal is a simple HTTP2 web-framework implemented in Go (Golang), made for fast a
 1. [Installation](#installation)
 2. [Documentation](#documentation)
 3. [Examples](#examples)
-4. [Functionality](#functionality)
+4. [Implementations](#implementations)
 5. [Todo](#todo)
 6. [Dependencies](#dependencies)
 7. [Tests](#tests)
@@ -35,6 +35,7 @@ r.Get("/", func(req *http.Request, res *http.Response) {
   res.String(200, "Hello World! :D")
 })
 
+// A simple PUT-endpoint
 r.Put("/:id", func(req *http.Request, res *http.Response) {
   id := req.Param("id") // Read path parameter
   res.String(200, id)
@@ -78,10 +79,13 @@ r := router.NewRouter("/")
 
 // This endpoint is protected
 r.Post("/todo", auth, func(req *http.Request, res *http.Response) {
-  // Create new todo-item here
-  ....
-  
-  res.Created()
+  task := string(req.Body)
+  // Create new todo-item
+  todo := http.JSON {
+   "todo": task,
+   "done": false,
+  }
+  res.JSON(201, todo)
 }
 
 srv.Register(r)
@@ -100,7 +104,24 @@ srv.Register(r)
 srv.Listen(443)
 ```
 
-## Functionality
+## Implementations
+### Core of the HTTP/2 Protocol
+Implemented most of the HTTP2-protocol, specified by [RFC7540](https://tools.ietf.org/html/rfc7540)
+ * HTTP/2 Connection Preface, [RFC7540 Section 3.5](https://tools.ietf.org/html/rfc7540#section-3.5)
+ * TLS Support, [RFC7540 Section 3.3](https://tools.ietf.org/html/rfc7540#section-3.3)
+ * Stream multiplexing, [RFC7540 Section 5](https://tools.ietf.org/html/rfc7540#section-5)
+    - Stream states, [RFC7540 Section 5.1](https://tools.ietf.org/html/rfc7540#section-5.1)
+    - Flow control, [RFC7540 Section 5.2](https://tools.ietf.org/html/rfc7540#section-5.2)
+ * Frame management, [RFC7540 Section 4](https://tools.ietf.org/html/rfc7540#section-4)
+ * Server Push, [RFC7540 Section 8.2](https://tools.ietf.org/html/rfc7540#section-8.2)
+ 
+### HPACK - Header compression
+Created a robust and solid HPACK library, [RFC7541](https://tools.ietf.org/html/rfc7541)
+
+### HTTP Router library
+A high preformance HTTP-Router with parameter- and filehandling-functionality.
+
+### 
 
 ## Todo
 

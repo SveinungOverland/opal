@@ -35,6 +35,11 @@ r.Get("/", func(req *http.Request, res *http.Response) {
   res.String(200, "Hello World! :D")
 })
 
+r.Put("/:id", func(req *http.Request, res *http.Response) {
+  id := req.Param("id") // Read path parameter
+  res.String(200, id)
+})
+
 srv.Register(r) // Register router
 srv.Listen(443)
 ```
@@ -64,16 +69,35 @@ func auth(req *http.Request, res *http.Response) {
   token := req.Query("token")
   if token != "MY_SECRET_PASSWORD" {
     req.Finish() // Stops rests of the endpoint flow
-    req.Unauthorized()
+    res.Unauthorized()
   }
 }
 
 srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
 r := router.NewRouter("/")
 
-r.Post("/", auth, func(req *http.Request, res *http.Response) {
+// This endpoint is protected
+r.Post("/todo", auth, func(req *http.Request, res *http.Response) {
+  // Create new todo-item here
+  ....
   
+  res.Created()
 }
+
+srv.Register(r)
+srv.Listen(443)
+```
+
+### Static Content
+To serve static content, for example a React or Vue build, just provide the build path in router.Static().
+```go
+srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
+r := router.NewRouter("/")
+
+r.Static("/", "./build") // Serves the entire build folder on root path
+
+srv.Register(r)
+srv.Listen(443)
 ```
 
 ## Functionality

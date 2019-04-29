@@ -26,7 +26,7 @@ go get github.com/SveinungOverland/opal
 ## Examples
 ### Basic Usage
 ```go
-srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
+srv, err := opal.NewTLSServer("./server.crt", "./server.key")
 r := router.NewRouter("/")
 
 // A simple GET-endpoint
@@ -46,7 +46,7 @@ srv.Listen(443)
 
 ### Server Push
 ```go
-srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
+srv, err := opal.NewTLSServer("./server.crt", "./server.key")
 r := router.NewRouter("/")
 
 // A simple endpoint that returns an index.html
@@ -65,15 +65,16 @@ srv.Listen(443)
 ### Middlewares
 ```go
 // Authorization middleware
-func auth(req *http.Request, res *http.Response) {
+auth := func(req *http.Request, res *http.Response) {
   token := req.Query("token")
+  
   if token != "MY_SECRET_PASSWORD" {
     res.Unauthorized()
     req.Finish() // Stops rests of the endpoint flow
   }
 }
 
-srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
+srv, err := opal.NewTLSServer("./server.crt", "./server.key")
 r := router.NewRouter("/")
 
 // This endpoint is protected
@@ -85,7 +86,7 @@ r.Post("/todo", auth, func(req *http.Request, res *http.Response) {
    "todo": task,
    "done": false,
   })
-}
+})
 
 srv.Register(r)
 srv.Listen(443)
@@ -94,7 +95,7 @@ srv.Listen(443)
 ### Static Content
 To serve static content, for example a React or Vue build, just provide the build path in router.Static().
 ```go
-srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
+srv, err := opal.NewTLSServer("./server.crt", "./server.key")
 r := router.NewRouter("/")
 
 r.Static("/", "./build") // Serves the entire build folder on root path

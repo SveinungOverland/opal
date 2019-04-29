@@ -109,7 +109,8 @@ func serveRequest(conn *Conn, req *http.Request) *http.Response {
 		req.Params = params
 		handlers := route.GetHandlers(req.Method)
 		if len(handlers) > 0 {
-			handleRoute(handlers, req, res)
+			middlewares := conn.server.middlewares
+			handleRoute(append(middlewares, handlers...), req, res)
 		} else {
 			res.NotFound() // No handlers found - 404
 		}

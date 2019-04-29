@@ -16,6 +16,8 @@ type Server struct {
 	isTLS         bool
 	connErrorChan *chan error
 	rootRoute     *router.Route
+
+	middlewares []router.HandleFunc
 }
 
 // NewTLSServer creates a new http2-server with a TLS configuration
@@ -26,9 +28,10 @@ func NewTLSServer(certPath, privateKeyPath string) (*Server, error) {
 	}
 
 	return &Server{
-		cert:      cert,
-		isTLS:     true,
-		rootRoute: router.NewRoot(),
+		cert:        cert,
+		isTLS:       true,
+		rootRoute:   router.NewRoot(),
+		middlewares: make([]router.HandleFunc, 0),
 	}, nil
 }
 
@@ -62,6 +65,11 @@ func (s *Server) Listen(port int16) error {
 // Register registers a router to the server
 func (s *Server) Register(r *router.Router) {
 	s.rootRoute.AppendRouter(r)
+}
+
+// Use registers a handler as a middleware
+func (s *Server) Use(handler router.HandleFunc) {
+	s.middlewares = append(s.middlewares, handler)
 }
 
 func (s *Server) createConn(conn net.Conn) *Conn {

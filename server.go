@@ -65,13 +65,6 @@ func (s *Server) Register(r *router.Router) {
 	s.rootRoute.AppendRouter(r)
 }
 
-// NewRouter creates a new router for the server
-func (s *Server) NewRouter(basePath string) *router.Router {
-	r := router.NewRouter(basePath)
-	s.Register(r)
-	return r
-}
-
 func (s *Server) createConn(conn net.Conn) *Conn {
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &Conn{

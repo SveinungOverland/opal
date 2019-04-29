@@ -44,12 +44,14 @@ srv.Listen(443)
 srv, err := opal.NewTLSServer("./server.crt", "./server.key", nil)
 r := router.NewRouter("/")
 
+// A simple endpoint that returns an index.html
 r.Get("/", func(req *http.Request, res *http.Response) {
     res.HTML("./index.html", nil)
-    res.Push("/static/app.js")
-    res.Push("/static/index.css")
+    res.Push("/static/app.js") // Push app.js
+    res.Push("/static/index.css") // Push index.css
 })
 
+// Includes access to static files (app.js and index.css)
 r.Static("/static", "./MY_STATIC_PATH")
 
 srv.Register(r)

@@ -2,7 +2,7 @@ package frame
 
 import (
 	"bytes"
-	"github.com/SveinungOverland/opal/errors"
+	"github.com/SveinungOverland/opal/constants"
 	"github.com/SveinungOverland/opal/frame/types"
 	"reflect"
 	"testing"
@@ -52,7 +52,7 @@ func TestFrameRead(t *testing.T) {
 func TestNewErrorFrame(t *testing.T) {
 	testErrorBytes := []byte{0, 0, 4, 3, 0, 0, 0, 0, 0, 0, 0, 0, 11}
 
-	newErrorFrame := NewErrorFrame(0, errors.EnhanceYourCalm)
+	newErrorFrame := NewErrorFrame(0, constants.EnhanceYourCalm)
 
 	if !bytes.Equal(newErrorFrame.ToBytes(), testErrorBytes) {
 		t.Error("Bytes did not match")

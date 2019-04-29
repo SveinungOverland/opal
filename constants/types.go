@@ -1,7 +1,7 @@
-package router
+package constants
 
-// Mimes is a map including all the http content-types of different files. MimeTypes ^^
-var Mimes = map[string]string{
+// Types is a map including all the http content-types of different files. MimeTypes ^^
+var ContentTypes = map[string]string{
 	".323":                    "text/h323",
 	".3g2":                    "video/3gpp2",
 	".3gp":                    "video/3gpp",

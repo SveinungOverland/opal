@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/SveinungOverland/opal/constants"
 	"io/ioutil"
 	"strings"
 )
@@ -22,10 +23,10 @@ func newFileHandler(relativePath string, filePath string) *FileHandler {
 	splitFilePath := strings.Split(filePath, ".")
 	if len(splitFilePath) == 1 {
 		fs.filePath = strings.TrimRight(fs.filePath, "/") + "/index.html"
-		fs.MimeType = Mimes[".html"]
+		fs.MimeType = constants.ContentTypes[".html"]
 	} else {
 		fileExtension := splitFilePath[len(splitFilePath)-1]
-		fs.MimeType = Mimes["."+fileExtension]
+		fs.MimeType = constants.ContentTypes["."+fileExtension]
 	}
 
 	return fs

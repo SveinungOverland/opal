@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/SveinungOverland/opal/constants"
 	"html/template"
 	"io/ioutil"
+	"strings"
 )
 
 // Response represents a http-response
@@ -22,22 +24,27 @@ type Response struct {
 // ----- BODY MODIFIERS -----
 
 // JSON sets body to the given content in json-format
-func (res *Response) JSON(target interface{}) {
+func (res *Response) JSON(status uint16, target interface{}) {
 	res.Header["content-type"] = "application/json"
 	json, _ := json.Marshal(target)
 
 	res.Body = json
+	res.Status = status
 }
 
 // File reads and sets the file
-func (res *Response) File(path string, contentType string) {
+func (res *Response) File(path string) {
 	file, err := ioutil.ReadFile(path)
 	if err != nil {
 		return
 	}
 
 	res.Body = file
-	res.Header["content-type"] = contentType
+
+	// Set content type
+	temp := strings.Split(path, ".")
+	fileType := temp[len(temp)-1]
+	res.Header["content-type"] = constants.ContentTypes[". "+fileType]
 }
 
 // HTML reads an html-file and builds a html-response. Includes support for templates.

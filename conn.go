@@ -6,7 +6,7 @@ import (
 	"github.com/SveinungOverland/opal/hpack"
 	"net"
 
-	"github.com/SveinungOverland/opal/errors"
+	"github.com/SveinungOverland/opal/constants"
 	"github.com/SveinungOverland/opal/frame"
 	"github.com/SveinungOverland/opal/frame/types"
 
@@ -157,11 +157,11 @@ loop:
 			}
 			if !(stream.state == Open || stream.state == HalfClosedLocal) {
 				// Stream is not in a state where it can receive data frames
-				c.outChanFrame <- frame.NewErrorFrame(stream.id, errors.StreamClosed)
+				c.outChanFrame <- frame.NewErrorFrame(stream.id, constants.StreamClosed)
 				continue loop
 			}
 			if stream.id == 0 {
-				c.outChanFrame <- NewConnErr(errors.ProtocolError)
+				c.outChanFrame <- NewConnErr(constants.ProtocolError)
 				continue loop
 			}
 			if stream.data == nil {
@@ -177,7 +177,7 @@ loop:
 			// New stream
 			if newFrame.ID == 0 {
 				// Error, a header should always be associated with a stream
-				c.outChanFrame <- NewConnErr(errors.ProtocolError)
+				c.outChanFrame <- NewConnErr(constants.ProtocolError)
 				continue loop
 			}
 			streamState := Idle
@@ -202,11 +202,11 @@ loop:
 		case frame.PriorityType:
 			stream, ok := c.GetStream(newFrame.ID)
 			if newFrame.ID == 0 {
-				c.outChanFrame <- NewConnErr(errors.ProtocolError)
+				c.outChanFrame <- NewConnErr(constants.ProtocolError)
 				continue loop
 			}
 			if newFrame.Length != 5 {
-				c.outChanFrame <- frame.NewErrorFrame(stream.id, errors.FrameSizeError)
+				c.outChanFrame <- frame.NewErrorFrame(stream.id, constants.FrameSizeError)
 				continue loop
 			}
 			if !ok {
@@ -222,32 +222,32 @@ loop:
 		case frame.RstStreamType:
 			stream, ok := c.GetStream(newFrame.ID)
 			if newFrame.ID == 0 {
-				c.outChanFrame <- NewConnErr(errors.ProtocolError)
+				c.outChanFrame <- NewConnErr(constants.ProtocolError)
 				continue loop
 			}
 			if newFrame.Length != 4 {
-				c.outChanFrame <- frame.NewErrorFrame(stream.id, errors.FrameSizeError)
+				c.outChanFrame <- frame.NewErrorFrame(stream.id, constants.FrameSizeError)
 				continue loop
 			}
 			if !ok {
-				c.outChanFrame <- NewConnErr(errors.ProtocolError)
+				c.outChanFrame <- NewConnErr(constants.ProtocolError)
 				continue loop
 			}
 			stream.state = Closed
 			// TODO HANDLE ERROR CODE SENT IN FRAME
 		case frame.SettingsType:
 			if newFrame.ID != 0 {
-				c.outChanFrame <- NewConnErr(errors.ProtocolError)
+				c.outChanFrame <- NewConnErr(constants.ProtocolError)
 				continue loop
 			}
 			if newFrame.Flags.(*types.SettingsFlags).Ack {
 				if newFrame.Length != 0 {
-					c.outChanFrame <- NewConnErr(errors.FrameSizeError)
+					c.outChanFrame <- NewConnErr(constants.FrameSizeError)
 				}
 				continue loop
 			}
 			if newFrame.Length%6 != 0 {
-				c.outChanFrame <- NewConnErr(errors.FrameSizeError)
+				c.outChanFrame <- NewConnErr(constants.FrameSizeError)
 				continue loop
 			}
 			if settingsFrame.Length > 0 {
@@ -271,11 +271,11 @@ loop:
 			// Server does not handle PushPromises
 		case frame.PingType:
 			if newFrame.ID != 0 {
-				c.outChanFrame <- NewConnErr(errors.ProtocolError)
+				c.outChanFrame <- NewConnErr(constants.ProtocolError)
 				continue loop
 			}
 			if newFrame.Length != 8 {
-				c.outChanFrame <- NewConnErr(errors.FrameSizeError)
+				c.outChanFrame <- NewConnErr(constants.FrameSizeError)
 				continue loop
 			}
 			if !newFrame.Flags.(*types.PingFlags).Ack {
@@ -292,10 +292,10 @@ loop:
 			}
 		case frame.GoAwayType:
 			if newFrame.ID != 0 {
-				c.outChanFrame <- NewConnErr(errors.ProtocolError)
+				c.outChanFrame <- NewConnErr(constants.ProtocolError)
 				continue loop
 			}
-			if newFrame.Payload.(*types.GoAwayPayload).ErrorCode != errors.NoError {
+			if newFrame.Payload.(*types.GoAwayPayload).ErrorCode != constants.NoError {
 				c.server.NonBlockingErrorChanSend(error.New(fmt.Sprint(newFrame.Payload.(*types.GoAwayPayload).ErrorCode)))
 				break loop
 			} else {
@@ -305,11 +305,11 @@ loop:
 		case frame.WindowUpdateType:
 			// Update the window size
 			if newFrame.Payload.(*types.WindowUpdatePayload).WindowSizeIncrement == 0 {
-				c.outChanFrame <- NewConnErr(errors.ProtocolError)
+				c.outChanFrame <- NewConnErr(constants.ProtocolError)
 				continue loop
 			}
 			if newFrame.Length != 4 {
-				c.outChanFrame <- NewConnErr(errors.FrameSizeError)
+				c.outChanFrame <- NewConnErr(constants.FrameSizeError)
 				continue loop
 			}
 			if newFrame.ID == 0 {
@@ -320,7 +320,7 @@ loop:
 			stream, ok := c.GetStream(newFrame.ID)
 			if !ok || newFrame.ID == 0 {
 				// Error continuation should always only follow a header
-				c.outChanFrame <- NewConnErr(errors.ProtocolError)
+				c.outChanFrame <- NewConnErr(constants.ProtocolError)
 			}
 			if newFrame.Flags.(*types.ContinuationFlags).EndHeaders {
 				stream.state = Open

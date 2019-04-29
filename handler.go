@@ -2,7 +2,7 @@ package opal
 
 import (
 	"fmt"
-	"github.com/SveinungOverland/opal/errors"
+	"github.com/SveinungOverland/opal/constants"
 	"github.com/SveinungOverland/opal/frame"
 	"github.com/SveinungOverland/opal/frame/types"
 	"github.com/SveinungOverland/opal/hpack"
@@ -49,7 +49,7 @@ func serveStreamHandler(conn *Conn) {
 			req, err := createRequest(conn, s) // Header decompression, creating request
 			if err != nil {
 				fmt.Println(err)
-				conn.outChanFrame <- frame.NewErrorFrame(s.id, errors.CompressionError)
+				conn.outChanFrame <- frame.NewErrorFrame(s.id, constants.CompressionError)
 				continue
 			}
 

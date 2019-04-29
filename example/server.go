@@ -25,10 +25,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	r := router.NewRouter("/")
+
 	r.Get("/", func(req *http.Request, res *http.Response) {
-		res.Body = []byte("Hello World")
+		res.String(200, "Hello World :D")
 	})
 
 	r.Get("/site", func(req *http.Request, res *http.Response) {

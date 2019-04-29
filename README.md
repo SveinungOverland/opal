@@ -8,14 +8,15 @@
 Opal is a simple HTTP2 web-framework implemented in Go (Golang), made for fast and reliable development. Opal is a powerful package for quickly writing modular web applications/services in Go.
 
 ## Content
-    [Installation](#Installation)
-    [Documentation](#Documentation)
-    [Examples](#Examples)
-    [Functionality](#Functionality)
-    [Todo](#Todo)
-    [Dependencies](#Dependencies)
-    [Tests](#Tests)
+[Installation](#Installation)
+[Documentation](#Documentation)
+[Examples](#Examples)
+[Functionality](#Functionality)
+[Todo](#Todo)
+[Dependencies](#Dependencies)
+[Tests](#Tests)
 
+## Installation
 
 ## Authors
 <a href="https://github.com/Andorr" target="_blank"><img src="https://avatars2.githubusercontent.com/u/31648998?s=400&v=4" width=40 title="Andorr"/></a>

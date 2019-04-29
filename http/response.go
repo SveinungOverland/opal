@@ -56,6 +56,12 @@ func (res *Response) HTML(path string, templateData interface{}) {
 	res.Header["content-type"] = "text/html; charset=utf-8"
 }
 
+func (res *Response) String(status uint16, s string) {
+	res.Status = status
+	res.Body = []byte(s)
+	res.Header["content-type"] = "text/plain; charset=utf-8"
+}
+
 // ----- STATUS SETTERS ------
 
 // Ok sets response status-code to 200

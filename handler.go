@@ -107,13 +107,9 @@ func serveRequest(conn *Conn, req *http.Request) *http.Response {
 	if match {
 		// Found route, run handlers and build response
 		req.Params = params
+		middlewares := conn.server.middlewares
 		handlers := route.GetHandlers(req.Method)
-		if len(handlers) > 0 {
-			middlewares := conn.server.middlewares
-			handleRoute(append(middlewares, handlers...), req, res)
-		} else {
-			res.NotFound() // No handlers found - 404
-		}
+		handleRoute(middlewares, handlers, req, res)
 	} else if fh != nil { // Handle static file response
 		handleFile(res, fh)
 	} else {
@@ -187,7 +183,22 @@ func sendPushRequest(conn *Conn, reqs []*http.Request, s *Stream) []*responseWra
 // ---- HELPERS -----
 
 // HandleRoute runs endpoint-handlers and builds a response
-func handleRoute(handlers []router.HandleFunc, req *http.Request, res *http.Response) {
+func handleRoute(middlewares []router.HandleFunc, handlers []router.HandleFunc, req *http.Request, res *http.Response) {
+	// Run all middlewares
+	for _, middleware := range middlewares {
+		if req.IsFinished() {
+			break
+		}
+		middleware(req, res)
+	}
+
+	// Check if any handlers are defined, if not 404
+	if len(handlers) == 0 {
+		res.NotFound()
+		return
+	}
+
+	// Run all handlers
 	for _, handler := range handlers {
 		if req.IsFinished() {
 			break

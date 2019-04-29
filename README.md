@@ -9,21 +9,20 @@ Opal is a simple HTTP2 web-framework implemented in Go (Golang), made for fast a
 
 ## Content
 1. [Installation](#installation)
-2. [Documentation](#documentation)
-3. [Examples](#examples)
-4. [Implementations](#implementations)
-5. [Todo](#todo)
-6. [Dependencies](#dependencies)
-7. [Tests](#tests)
-7. [Authors](#authors)
+2. [Examples](#examples)
+3. [Implementations](#implementations)
+4. [Todo](#todo)
+5. [Dependencies](#dependencies)
+6. [Tests](#tests)
+7. [Documentation](#documentation)
+8. [Authors](#authors)
 
 ## Installation
 To install Opal just install from the Github repo.
 ```
 go get github.com/SveinungOverland/opal
 ```
-## Documentation
-GENERATE DOCS MAYBE?
+
 ## Examples
 ### Basic Usage
 ```go
@@ -146,6 +145,19 @@ For seeing test-coverage the following commands can be exectuted:
 go test -v ./... -coverageprofile=coverage.out
 go tool cover -html=coverage.out
 ```
+
+## Documentation
+GoDoc is generated and hosted at [godoc.org](https://godoc.org/github.com/SveinungOverland/opal)
+At the bottom of the page there is also docs for the subpackages (like __http__ and __hpack__)
+
+#### HTTP Docs (Request and Response)
+GoDoc: [https://godoc.org/github.com/SveinungOverland/opal/http](https://godoc.org/github.com/SveinungOverland/opal/http)
+
+#### Router Docs (Get, Post, Put...)
+GoDoc: [https://godoc.org/github.com/SveinungOverland/opal/router](https://godoc.org/github.com/SveinungOverland/opal/router)
+
+#### HPACK Docs
+GoDoc: [https://godoc.org/github.com/SveinungOverland/opal/hpack](https://godoc.org/github.com/SveinungOverland/opal/hpack)
 
 ## Authors
 <a href="https://github.com/Andorr" target="_blank"><img src="https://avatars2.githubusercontent.com/u/31648998?s=400&v=4" width=40 title="Andorr"/></a>

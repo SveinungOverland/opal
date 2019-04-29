@@ -49,6 +49,11 @@ func (r *Request) Query(name string) string {
 	return r.RawQuery[startIndex:(endIndex)]
 }
 
+// Param gets a value of a parameter by name
+func (r *Request) Param(name string) string {
+	return r.Params[name]
+}
+
 // Finish makes the request finished. Which means next handler in the function won't run.
 func (r *Request) Finish() {
 	r.finished = true

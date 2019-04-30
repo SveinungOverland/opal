@@ -144,6 +144,7 @@ A high preformance HTTP-Router with parameter- and filehandling-functionality.
 * Add support for HTTP/1.1
 * Implement Stream Priority, [RFC7540 Section 5.3](https://tools.ietf.org/html/rfc7540#section-5.3)
 * Implement better support for middlewares
+* Implement server push for static routes
 
 ## Dependencies
 

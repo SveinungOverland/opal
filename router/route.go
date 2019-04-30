@@ -85,6 +85,7 @@ func (r *Route) merge(route *Route) {
 	r.Delete = route.Delete
 	r.Patch = route.Patch
 	r.subRoutes = route.subRoutes
+	r.paramRoute = route.paramRoute
 }
 
 // ---- HELPERS ------

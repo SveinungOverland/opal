@@ -128,7 +128,7 @@ Created a robust and solid HPACK library, [RFC7541](https://tools.ietf.org/html/
 A high preformance HTTP-Router with parameter- and filehandling-functionality.
 
 ## Todo
-* Add support for HTTP/1.1 ( Had no time :( )
+* Add support for HTTP/1.1
 * Implement Stream Priority, [RFC7540 Section 5.3](https://tools.ietf.org/html/rfc7540#section-5.3)
 
 
@@ -151,7 +151,7 @@ go tool cover -html=coverage.out
 ```
 
 ## Documentation
-GoDoc is generated and hosted at [godoc.org](https://godoc.org/github.com/SveinungOverland/opal)
+GoDoc is generated and hosted at [godoc.org/opal](https://godoc.org/github.com/SveinungOverland/opal). 
 At the bottom of the page there is also docs for the subpackages (like __http__ and __hpack__)
 
 #### HTTP Docs (Request and Response)
